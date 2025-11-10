@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { Queue } from "bullmq";
 import { z } from "zod";
 
 const uploadSchema = z.object({
@@ -11,6 +12,8 @@ const uploadSchema = z.object({
   size: z.number().positive(),
   type: z.string().min(1),
 });
+
+const fileQueue = new Queue("file-upload-queue");
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,6 +73,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await fileQueue.add("file-ready", { fileId: dbFile.id });
     return NextResponse.json({ success: true, file: dbFile });
   } catch (err) {
     console.error("Upload error", err);
