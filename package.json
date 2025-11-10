@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"npm run worker\" \"next dev\" --names \"worker,next\" --prefix-colors \"blue,green\"",
+    "worker": "tsx watch --env-file .env lib/worker.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -27,9 +28,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
+    "concurrently": "^9.2.1",
     "eslint-config-next": "16.0.1",
     "prisma": "^6.19.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }
