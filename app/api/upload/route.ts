@@ -1,5 +1,6 @@
 import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -23,7 +24,6 @@ export async function POST(req: NextRequest) {
       );
     }
     const formData = await req.formData();
-    console.log("what is form data", formData);
     const file = formData.get("file") as File;
     if (!file) {
       return NextResponse.json({ error: "No File Uploaded" }, { status: 400 });
@@ -47,6 +47,30 @@ export async function POST(req: NextRequest) {
         contentType: file.type || "text/plain",
         upsert: false,
       });
+    if (error || !uploadData) {
+      console.error("Supabase upload error:", error);
+      return NextResponse.json({ error: "Failed to upload" }, { status: 500 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const dbFile = await prisma.file.create({
+      data: {
+        name: parsed.name,
+        fileType: parsed.type,
+        size: parsed.size,
+        supabaseFileId: fileId,
+        supabasePath: uploadData.path,
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json({ success: true, file: dbFile });
   } catch (err) {
     console.error("Upload error", err);
     return NextResponse.json(
