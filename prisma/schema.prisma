@@ -55,4 +55,21 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  files File[]
+}
+
+model File {
+  id        String   @id @default(cuid())
+  name      String
+  fileType String
+  size Int
+  supabaseFileId String
+  supabasePath   String
+  metadata       Json?
+  analysis       Json?      
+  createdAt DateTime @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
