@@ -55,21 +55,37 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  files File[]
+  files         File[]
+  analyses      Analysis[]
 }
 
 model File {
-  id        String   @id @default(cuid())
-  name      String
-  fileType String
-  size Int
+  id             String    @id @default(cuid())
+  name           String
+  fileType       String
+  size           Int
   supabaseFileId String
   supabasePath   String
   metadata       Json?
   analysis       Json?      
-  createdAt DateTime @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  analyses  Analysis[] @relation("FileAnalyses") // <-- back-relation
+}
+
+model Analysis {
+  id        String   @id @default(cuid())
+  file      File     @relation("FileAnalyses", fields: [fileId], references: [id], onDelete: Cascade)
+  fileId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  summary   String  
+  todos     Json?    
+  tips      Json?    
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
