@@ -34,19 +34,29 @@ Conversation to Analyze:
 
 export async function POST(req: NextRequest) {
   try {
+    console.log("📥 [STEP 1] Received request to /api/analyze");
+
     // 1️⃣ Auth check
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.email) {
+      console.warn("⚠️ Unauthorized access attempt.");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = session.user.email;
+    console.log("✅ Authenticated user:", userId);
 
     // 2️⃣ Parse input
     const body = (await req.json()) as AnalyzeRequest;
     const { fileId, conversationText } = body;
 
+    console.log("🧾 Request body:", body);
+
     if (!conversationText || !fileId) {
+      console.error("❌ Missing required fields:", {
+        fileId,
+        conversationText,
+      });
       return NextResponse.json(
         { error: "Missing fileId or conversationText" },
         { status: 400 }
@@ -54,46 +64,76 @@ export async function POST(req: NextRequest) {
     }
 
     // 3️⃣ Generate embedding
+    console.log("🧠 Generating embedding using HuggingFace model...");
     const hfResponse = await hf.featureExtraction({
       model: "sentence-transformers/all-MiniLM-L6-v2",
       inputs: conversationText,
     });
 
-    // Flatten nested array if needed
     const queryEmbedding = Array.isArray(hfResponse[0])
       ? hfResponse[0]
-      : hfResponse;
+      : hfResponse.flat();
 
-    if (!Array.isArray(queryEmbedding) || queryEmbedding.length < 100) {
-      console.error("Invalid embedding shape:", queryEmbedding);
+    console.log("✅ Embedding generated.");
+    console.log("Embedding length:", queryEmbedding.length);
+    console.log("First 5 values of embedding:", queryEmbedding.slice(0, 5));
+
+    if (!Array.isArray(queryEmbedding) || queryEmbedding.length !== 384) {
+      console.error(
+        "❌ Invalid embedding shape. Expected 384 dims, got:",
+        queryEmbedding.length
+      );
       throw new Error("Invalid embedding format");
     }
 
-    // 4️⃣ Search in Qdrant
-    const searchResult = await qdrantClient.search(COLLECTION_NAME, {
-      vector: queryEmbedding,
+    // 4️⃣ Verify Qdrant Collection
+    console.log("🔍 Checking Qdrant collection:", COLLECTION_NAME);
+    const collectionInfo = await qdrantClient.getCollection(COLLECTION_NAME);
+    console.log("📦 Qdrant collection info:", collectionInfo);
+
+    // 5️⃣ Search in Qdrant
+    console.log(
+      "🚀 Searching in Qdrant with vector size:",
+      queryEmbedding.length
+    );
+    const searchPayload = {
+      vector: queryEmbedding as number[],
       limit: 5,
       with_payload: true,
       filter: {
         must: [
           {
             key: "fileId",
-            match: { value: fileId }, // ✅ FIXED
+            match: { any: [fileId] },
           },
         ],
       },
-    });
+    };
 
-    console.log("🔍 Qdrant Search Result:", searchResult);
+    console.log(
+      "🧩 Qdrant search payload:",
+      JSON.stringify(searchPayload, null, 2)
+    );
+
+    const searchResult = await qdrantClient.search(
+      COLLECTION_NAME, // First argument
+      searchPayload // Second argument (NOW USING OUR VARIABLE)
+    );
+
+    console.log(
+      "🔍 Qdrant Search Result:",
+      JSON.stringify(searchResult, null, 2)
+    );
 
     if (!searchResult.length) {
+      console.warn("⚠️ No matching chunks found in Qdrant for fileId:", fileId);
       return NextResponse.json(
         { error: "No matching chunks found in Qdrant" },
         { status: 404 }
       );
     }
 
-    // 5️⃣ Prepare context for LLM
+    // 6️⃣ Prepare context
     const context = searchResult
       .map((r, i) => {
         const payload = r.payload;
@@ -104,7 +144,12 @@ export async function POST(req: NextRequest) {
       .join("\n\n")
       .slice(0, 3000);
 
-    // 6️⃣ Stream Gemini LLM output
+    console.log("🧩 Context prepared (truncated to 3000 chars):");
+    console.log(context.slice(0, 500) + "...");
+
+    // 7️⃣ Stream Gemini LLM output
+    console.log("🤖 Starting Gemini model response stream...");
+
     const stream = createUIMessageStream({
       execute: async ({ writer }) => {
         const model = google("gemini-2.5-flash");
@@ -114,6 +159,8 @@ export async function POST(req: NextRequest) {
           conversationText
         );
 
+        console.log("📜 Final LLM prompt length:", finalPrompt.length);
+
         const result = streamText({
           model,
           prompt: finalPrompt,
@@ -122,16 +169,16 @@ export async function POST(req: NextRequest) {
         });
 
         result.toUIMessageStream().on("data", (chunk) => {
-          console.log("[Gemini LLM chunk]:", chunk);
+          console.log("[Gemini Stream Chunk]:", chunk);
         });
 
         writer.merge(result.toUIMessageStream());
 
         const fullText = await result.text();
-
-        console.log("[Gemini Final Response]:", fullText);
+        console.log("✅ [Gemini Final Response]:", fullText);
 
         if (fullText) {
+          console.log("💾 Saving LLM response to Prisma...");
           await prisma.analysis.create({
             data: {
               fileId,
@@ -140,15 +187,25 @@ export async function POST(req: NextRequest) {
               content: fullText,
             },
           });
+          console.log("✅ Response saved successfully.");
         }
       },
     });
 
+    console.log("✅ Returning streamed response to client.");
     return createUIMessageStreamResponse({ stream });
-  } catch (err) {
-    console.error("RAG Analysis Error:", err);
+  } catch (err: any) {
+    console.error("❌ RAG Analysis Error:", err);
+    let detailedError = "No response data from Qdrant.";
+    if (err.response?.data) {
+      detailedError = JSON.stringify(err.response.data, null, 2);
+    } else if (err.data) {
+      detailedError = JSON.stringify(err.data, null, 2);
+    }
+
+    console.error("🧾 Qdrant Error Response:", detailedError);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: err.message || "Internal Server Error" },
       { status: 500 }
     );
   }
