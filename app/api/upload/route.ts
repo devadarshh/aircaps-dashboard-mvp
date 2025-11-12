@@ -5,13 +5,6 @@ import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Queue } from "bullmq";
-import { z } from "zod";
-
-const uploadSchema = z.object({
-  name: z.string().min(1),
-  size: z.number().positive(),
-  type: z.string().min(1),
-});
 
 const fileQueue = new Queue("file-upload-queue");
 
@@ -26,17 +19,13 @@ export async function POST(req: NextRequest) {
         }
       );
     }
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
+
     if (!file) {
       return NextResponse.json({ error: "No File Uploaded" }, { status: 400 });
     }
-
-    const parsed = uploadSchema.parse({
-      name: file.name,
-      size: file.size,
-      type: file.type || "text/plain",
-    });
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -50,6 +39,7 @@ export async function POST(req: NextRequest) {
         contentType: file.type || "text/plain",
         upsert: false,
       });
+
     if (error || !uploadData) {
       console.error("Supabase upload error:", error);
       return NextResponse.json({ error: "Failed to upload" }, { status: 500 });
@@ -58,15 +48,16 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const dbFile = await prisma.file.create({
       data: {
-        name: parsed.name,
-        fileType: parsed.type,
-        size: parsed.size,
+        name: file.name,
+        fileType: file.type || "text/plain",
+        size: file.size,
         supabaseFileId: fileId,
         supabasePath: uploadData.path,
         userId: user.id,
@@ -74,6 +65,7 @@ export async function POST(req: NextRequest) {
     });
 
     await fileQueue.add("file-ready", { fileId: dbFile.id });
+
     return NextResponse.json({ success: true, file: dbFile });
   } catch (err) {
     console.error("Upload error", err);
