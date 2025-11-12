@@ -17,6 +17,17 @@ const workerOptions: WorkerOptions = {
 interface FileJobData {
   fileId: string;
 }
+
+function calculateDurationFormText(transcript: string): number {
+  if (!transcript || transcript.length === 0) {
+    return 0;
+  }
+  const wordCount = transcript.split(/\s+/).length;
+  const wordsPerMinute = 150;
+  const durationMinutes = wordCount / wordsPerMinute;
+  return durationMinutes;
+}
+
 const worker = new Worker<FileJobData>(
   "file-upload-queue",
   async (job) => {
@@ -41,6 +52,18 @@ const worker = new Worker<FileJobData>(
     }
 
     const text = await fileBlob.text();
+    const durationMinutes = calculateDurationFormText(text);
+    console.log(
+      `File ${fileId}: Calculated duration ${durationMinutes.toFixed(2)} mins`
+    );
+
+    await prisma.file.update({
+      where: { id: fileId },
+      data: {
+        durationMinutes: durationMinutes,
+        status: "PROCESSING",
+      },
+    });
     const doc = new Document({
       pageContent: text,
       metadata: {
@@ -70,7 +93,14 @@ const worker = new Worker<FileJobData>(
     }));
     await qdrantClient.upsert(COLLECTION_NAME, { points });
     console.log(`Stored ${points.length} embeddings for file ${fileId}`);
+    await prisma.file.update({
+      where: { id: fileId },
+      data: {
+        status: "READY",
+      },
+    });
   },
+
   workerOptions
 );
 ensureCollectionExists()

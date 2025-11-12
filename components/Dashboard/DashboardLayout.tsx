@@ -1,8 +1,9 @@
 "use client";
 
 import { ReactNode } from "react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Upload, Settings, Glasses, LogOut } from "lucide-react";
+import { BarChart3, Upload, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-sidebar-primary rounded-lg">
-              <Glasses className="h-5 w-5 text-sidebar-primary-foreground" />
+              <Image
+                src="/logo.svg"
+                alt="AirCaps Logo"
+                width={30}
+                height={30}
+                className="object-contain"
+              />
             </div>
             <span className="text-lg font-semibold text-sidebar-foreground">
               AirCaps

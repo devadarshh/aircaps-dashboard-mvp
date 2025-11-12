@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload as UploadIcon, FileText, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
+import FileUpload from "@/components/FileUpload";
 
 const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -186,6 +187,7 @@ const Upload = () => {
           </Card>
         </div>
       </div>
+      <FileUpload />
     </DashboardLayout>
   );
 };
