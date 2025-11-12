@@ -18,12 +18,34 @@ interface AnalyzeRequest {
 }
 
 const PROMPT = `
-You are an expert conversation coach.
-Analyze the following conversation chunks (retrieved from the vector database) and provide:
+You are an expert conversation coach with 50+ experience. And my name is Adarsh Analyze the following conversation chunks and return JSON format data **strictly in the following format** retrieved from the vector database and provide following information:
 
-1. Summary
-2. Key action items / TODOs
-3. Suggestions to improve the conversation style
+{
+  "title": "Short summary of the conversation",
+  "summary": "Detailed summary",
+  "todos": ["Follow up on X", "Schedule next call"],
+  "talkListenRatio": 0.62,
+  "talkTimeDist": [
+    { "speaker": "Adarsh", "durationSec": 340 },
+    { "speaker": "Coach", "durationSec": 210 }
+  ],
+  "speakingMetrics": {
+    "paceOverTime": [
+      { "minute": 1, "paceWPM": 140 },
+      { "minute": 2, "paceWPM": 155 }
+    ],
+    "fillerWords": [
+      { "word": "um", "count": 12 },
+      { "word": "like", "count": 8 }
+    ],
+    "longestMonologueSec": 70
+  },
+  "sentiments": [
+    { "timestamp": "00:00", "sentiment": "neutral", "score": 0.4 },
+    { "timestamp": "01:00", "sentiment": "positive", "score": 0.8 },
+    { "timestamp": "02:00", "sentiment": "negative", "score": 0.3 }
+  ]
+}
 
 Conversation Context:
 {context}
@@ -34,23 +56,16 @@ Conversation to Analyze:
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("📥 [STEP 1] Received request to /api/analyze");
-
-    // 1️⃣ Auth check
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.email) {
-      console.warn("⚠️ Unauthorized access attempt.");
+      console.warn(" Unauthorized access attempt.");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = session.user.email;
-    console.log("✅ Authenticated user:", userId);
 
-    // 2️⃣ Parse input
     const body = (await req.json()) as AnalyzeRequest;
     const { fileId, conversationText } = body;
-
-    console.log("🧾 Request body:", body);
 
     if (!conversationText || !fileId) {
       console.error("❌ Missing required fields:", {
@@ -63,8 +78,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3️⃣ Generate embedding
-    console.log("🧠 Generating embedding using HuggingFace model...");
     const hfResponse = await hf.featureExtraction({
       model: "sentence-transformers/all-MiniLM-L6-v2",
       inputs: conversationText,
@@ -74,10 +87,6 @@ export async function POST(req: NextRequest) {
       ? hfResponse[0]
       : hfResponse.flat();
 
-    console.log("✅ Embedding generated.");
-    console.log("Embedding length:", queryEmbedding.length);
-    console.log("First 5 values of embedding:", queryEmbedding.slice(0, 5));
-
     if (!Array.isArray(queryEmbedding) || queryEmbedding.length !== 384) {
       console.error(
         "❌ Invalid embedding shape. Expected 384 dims, got:",
@@ -86,16 +95,6 @@ export async function POST(req: NextRequest) {
       throw new Error("Invalid embedding format");
     }
 
-    // 4️⃣ Verify Qdrant Collection
-    console.log("🔍 Checking Qdrant collection:", COLLECTION_NAME);
-    const collectionInfo = await qdrantClient.getCollection(COLLECTION_NAME);
-    console.log("📦 Qdrant collection info:", collectionInfo);
-
-    // 5️⃣ Search in Qdrant
-    console.log(
-      "🚀 Searching in Qdrant with vector size:",
-      queryEmbedding.length
-    );
     const searchPayload = {
       vector: queryEmbedding as number[],
       limit: 5,
@@ -110,30 +109,19 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    console.log(
-      "🧩 Qdrant search payload:",
-      JSON.stringify(searchPayload, null, 2)
-    );
-
     const searchResult = await qdrantClient.search(
-      COLLECTION_NAME, // First argument
-      searchPayload // Second argument (NOW USING OUR VARIABLE)
-    );
-
-    console.log(
-      "🔍 Qdrant Search Result:",
-      JSON.stringify(searchResult, null, 2)
+      COLLECTION_NAME,
+      searchPayload
     );
 
     if (!searchResult.length) {
-      console.warn("⚠️ No matching chunks found in Qdrant for fileId:", fileId);
+      console.warn(" No matching chunks found in Qdrant for fileId:", fileId);
       return NextResponse.json(
         { error: "No matching chunks found in Qdrant" },
         { status: 404 }
       );
     }
 
-    // 6️⃣ Prepare context
     const context = searchResult
       .map((r, i) => {
         const payload = r.payload;
@@ -144,10 +132,6 @@ export async function POST(req: NextRequest) {
       .join("\n\n")
       .slice(0, 3000);
 
-    console.log("🧩 Context prepared (truncated to 3000 chars):");
-    console.log(context.slice(0, 500) + "...");
-
-    // 7️⃣ Stream Gemini LLM output
     console.log("🤖 Starting Gemini model response stream...");
 
     const stream = createUIMessageStream({
@@ -168,13 +152,9 @@ export async function POST(req: NextRequest) {
           experimental_transform: smoothStream(),
         });
 
-        result.toUIMessageStream().on("data", (chunk) => {
-          console.log("[Gemini Stream Chunk]:", chunk);
-        });
-
         writer.merge(result.toUIMessageStream());
 
-        const fullText = await result.text();
+        const fullText = await result.text;
         console.log("✅ [Gemini Final Response]:", fullText);
 
         if (fullText) {
@@ -183,8 +163,7 @@ export async function POST(req: NextRequest) {
             data: {
               fileId,
               userId,
-              //@ts-expect-error
-              content: fullText,
+              summary: fullText,
             },
           });
           console.log("✅ Response saved successfully.");

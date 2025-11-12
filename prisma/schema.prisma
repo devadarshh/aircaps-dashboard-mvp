@@ -85,9 +85,17 @@ model Analysis {
   fileId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
+
+  title String?
   summary   String  
   todos     Json?    
-  tips      Json?    
+  tips      Json?   
+  talkListenRatio Float?       
+  talkTimeDist    Json?          
+  speakingMetrics Json?          
+  sentiments      Json?         
+  
+  rawResponse     Json? 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
