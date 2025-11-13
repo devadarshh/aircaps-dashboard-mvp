@@ -3,7 +3,6 @@
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-
 import {
   Card,
   CardContent,
@@ -33,10 +32,11 @@ const Upload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileId, setFileId] = useState<string>("");
   const [conversationText, setConversationText] = useState<string>("");
-  const [analysisResult, setAnalysisResult] = useState<string>("");
+  const [sessionTitle, setSessionTitle] = useState<string>("");
   const { toast } = useToast();
   const router = useRouter();
 
+  // handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
@@ -45,6 +45,7 @@ const Upload = () => {
     setAnalysisDone(false);
   };
 
+  // handle upload logic
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
@@ -83,6 +84,7 @@ const Upload = () => {
     }
   };
 
+  // handle analyze logic
   const handleAnalyze = async () => {
     if (!conversationText || !fileId) {
       toast({
@@ -94,44 +96,30 @@ const Upload = () => {
 
     try {
       setIsAnalyzing(true);
-      setAnalysisResult("");
       toast({ title: "🧠 Analyzing...", description: "Processing your file." });
 
-      const res = await axios.post(
-        "/api/analyze",
-        { fileId, conversationText },
-        { responseType: "stream" } // for Node.js; Next.js edge stream support differs
-      );
-
-      setTimeout(() => {
-        router.push(`/dashboard/conversation/${fileId}`);
-      }, 1500);
-      // ⚠️ Axios stream reading is not supported in the browser,
-      // so we’ll handle normal JSON/text streaming instead:
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId, conversationText }),
+      // 🔹 POST request to backend for analysis
+      const res = await axios.post("/api/analyze", {
+        fileId,
+        conversationText,
+        title: sessionTitle,
       });
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let resultText = "";
+      if (!res.data.success) throw new Error("Analysis failed");
 
-      while (reader) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      const analysisId = res.data.analysis.id; // ✅ get analysisId from response
 
-        const chunk = decoder.decode(value);
-        resultText += chunk;
-        setAnalysisResult(resultText);
-      }
-
-      setAnalysisDone(true);
       toast({
         title: "✅ Analysis Complete",
         description: "Your session has been analyzed successfully.",
       });
+
+      setAnalysisDone(true);
+
+      // 🔹 Redirect to the analysis page instead of fileId
+      setTimeout(() => {
+        router.push(`/dashboard/conversation/${analysisId}`);
+      }, 1500);
     } catch (err) {
       console.error(err);
       toast({
@@ -147,19 +135,15 @@ const Upload = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-[#e9e6e2] p-6 lg:p-8 space-y-6">
-        {/* Header */}
         <div>
-          <h1 className="text-3xl font-semibold text-foreground mb-2">
-            Upload Captions
-          </h1>
+          <h1 className="text-3xl font-semibold mb-2">Upload Captions</h1>
           <p className="text-muted-foreground">
             Upload and process your live caption sessions
           </p>
         </div>
 
-        {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Upload Form */}
+          {/* Upload Section */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Upload Session Data</CardTitle>
@@ -170,13 +154,14 @@ const Upload = () => {
 
             <CardContent>
               <form onSubmit={handleUpload} className="space-y-6">
-                {/* Title */}
+                {/* Session Title */}
                 <div className="space-y-2">
-                  <Label htmlFor="title">Session Title</Label>
+                  <Label htmlFor="title">Session Title (optional)</Label>
                   <Input
                     id="title"
                     placeholder="e.g., Morning Team Meeting"
-                    required
+                    value={sessionTitle}
+                    onChange={(e) => setSessionTitle(e.target.value)}
                   />
                 </div>
 
@@ -189,14 +174,13 @@ const Upload = () => {
                       id="file"
                       className="hidden"
                       accept=".txt,.srt,.vtt,.pdf,.md"
-                      multiple={false}
                       onChange={handleFileChange}
                     />
                     {!file ? (
                       <label htmlFor="file" className="cursor-pointer">
                         <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="text-foreground font-medium mb-1">
-                          Drop your file here or click to browse
+                        <p className="font-medium mb-1">
+                          Drop your file or click to browse
                         </p>
                         <p className="text-sm text-muted-foreground">
                           Supports .txt, .srt, .vtt, .pdf, .md
@@ -207,9 +191,7 @@ const Upload = () => {
                         <div className="flex items-center gap-3 text-left">
                           <FileText className="h-6 w-6 text-primary" />
                           <div>
-                            <p className="font-medium text-foreground">
-                              {file.name}
-                            </p>
+                            <p className="font-medium">{file.name}</p>
                             <p className="text-xs text-muted-foreground">
                               {(file.size / 1024).toFixed(2)} KB
                             </p>
@@ -241,7 +223,7 @@ const Upload = () => {
                   ) : uploadSuccess ? (
                     <>
                       <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Upload Successful
+                      Uploaded
                     </>
                   ) : (
                     <>
@@ -267,7 +249,7 @@ const Upload = () => {
                     ) : analysisDone ? (
                       <>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Analysis Complete
+                        Done
                       </>
                     ) : (
                       <>
@@ -278,14 +260,6 @@ const Upload = () => {
                   </Button>
                 )}
               </form>
-
-              {/* Analysis Output */}
-              {analysisResult && (
-                <div className="mt-6 p-4 bg-white border rounded-md shadow-sm text-sm text-foreground whitespace-pre-wrap">
-                  <h3 className="font-semibold mb-2">Analysis Result:</h3>
-                  {analysisResult}
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -323,7 +297,6 @@ const Upload = () => {
                   </div>
                 </div>
               ))}
-
               <div className="pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">
                   Processing typically takes 30–60 seconds. You’ll be able to

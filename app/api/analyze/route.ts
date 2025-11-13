@@ -1,24 +1,87 @@
 import { google } from "@ai-sdk/google";
-import {
-  createUIMessageStream,
-  streamText,
-  smoothStream,
-  createUIMessageStreamResponse,
-} from "ai";
+import { streamText, smoothStream } from "ai";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hf } from "@/lib/hfClient";
 import { COLLECTION_NAME, qdrantClient } from "@/lib/qdrant";
+import { JsonOutputParser } from "@langchain/core/output_parsers";
 
 interface AnalyzeRequest {
   fileId: string;
   conversationText: string;
+  title?: string;
 }
 
-const PROMPT = `
-You are an expert conversation coach with 50+ experience. And my name is Adarsh Analyze the following conversation chunks and return JSON format data **strictly in the following format** retrieved from the vector database and provide following information:
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+    if (!user)
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    const {
+      fileId,
+      conversationText,
+      title: userProvidedTitle,
+    } = (await req.json()) as AnalyzeRequest;
+
+    if (!conversationText || !fileId)
+      return NextResponse.json(
+        { error: "Missing fileId or conversationText" },
+        { status: 400 }
+      );
+
+    // ✅ Step 1: Generate embeddings
+    const hfResponse = await hf.featureExtraction({
+      model: "sentence-transformers/all-MiniLM-L6-v2",
+      inputs: conversationText,
+    });
+    const queryEmbedding = Array.isArray(hfResponse[0])
+      ? hfResponse[0]
+      : hfResponse.flat();
+
+    if (!Array.isArray(queryEmbedding) || queryEmbedding.length !== 384)
+      throw new Error("Invalid embedding format");
+
+    // ✅ Step 2: Search context from Qdrant
+    const searchResult = await qdrantClient.search(COLLECTION_NAME, {
+      vector: queryEmbedding as number[],
+      limit: 5,
+      with_payload: true,
+      filter: { must: [{ key: "fileId", match: { any: [fileId] } }] },
+    });
+
+    if (!searchResult.length)
+      return NextResponse.json(
+        { error: "No matching chunks found in Qdrant" },
+        { status: 404 }
+      );
+
+    const context = searchResult
+      .map(
+        (r, i) =>
+          `---\nChunk ${i + 1}\nFile: ${r.payload?.fileId}\nContent: ${
+            r.payload?.content || ""
+          }\n---`
+      )
+      .join("\n\n")
+      .slice(0, 3000);
+
+    // ✅ Step 3: Prompt LLM to return JSON strictly
+    const parser = new JsonOutputParser();
+    const formatInstructions = parser.getFormatInstructions();
+
+    const PROMPT = `
+You are an expert conversation coach with 50+ years of experience. My name is Adarsh. 
+Analyze the following conversation chunks and return a JSON object **strictly in the format below**:
 
 {
   "title": "Short summary of the conversation",
@@ -48,141 +111,58 @@ You are an expert conversation coach with 50+ experience. And my name is Adarsh 
 }
 
 Conversation Context:
-{context}
+${context}
 
 Conversation to Analyze:
-{conversationText}
+${conversationText}
 `;
 
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
-      console.warn(" Unauthorized access attempt.");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const model = google("gemini-2.5-flash");
+
+    const result = streamText({
+      model,
+      prompt: PROMPT,
+      temperature: 0.3,
+      experimental_transform: smoothStream(),
+    });
+
+    const llmOutput = await result.text;
+
+    // ✅ Step 4: Parse LLM JSON
+    let parsedData;
+    try {
+      parsedData = await parser.parse(llmOutput);
+    } catch (err) {
+      console.warn("⚠️ Failed to parse LLM output as JSON", err);
+      parsedData = { raw: llmOutput };
     }
 
-    const userId = session.user.email;
+    const finalTitle =
+      userProvidedTitle?.trim() || parsedData.title || "Untitled Conversation";
 
-    const body = (await req.json()) as AnalyzeRequest;
-    const { fileId, conversationText } = body;
-
-    if (!conversationText || !fileId) {
-      console.error("❌ Missing required fields:", {
+    // ✅ Step 5: Save analysis
+    const savedAnalysis = await prisma.analysis.create({
+      data: {
         fileId,
-        conversationText,
-      });
-      return NextResponse.json(
-        { error: "Missing fileId or conversationText" },
-        { status: 400 }
-      );
-    }
-
-    const hfResponse = await hf.featureExtraction({
-      model: "sentence-transformers/all-MiniLM-L6-v2",
-      inputs: conversationText,
+        userId: user.id,
+        title: finalTitle,
+        summary: parsedData.summary,
+        todos: parsedData.todos,
+        talkListenRatio: parsedData.talkListenRatio,
+        talkTimeDist: parsedData.talkTimeDist,
+        speakingMetrics: parsedData.speakingMetrics,
+        sentiments: parsedData.sentiments,
+        rawResponse: parsedData,
+      },
+      select: { id: true },
     });
 
-    const queryEmbedding = Array.isArray(hfResponse[0])
-      ? hfResponse[0]
-      : hfResponse.flat();
-
-    if (!Array.isArray(queryEmbedding) || queryEmbedding.length !== 384) {
-      console.error(
-        "❌ Invalid embedding shape. Expected 384 dims, got:",
-        queryEmbedding.length
-      );
-      throw new Error("Invalid embedding format");
-    }
-
-    const searchPayload = {
-      vector: queryEmbedding as number[],
-      limit: 5,
-      with_payload: true,
-      filter: {
-        must: [
-          {
-            key: "fileId",
-            match: { any: [fileId] },
-          },
-        ],
-      },
-    };
-
-    const searchResult = await qdrantClient.search(
-      COLLECTION_NAME,
-      searchPayload
-    );
-
-    if (!searchResult.length) {
-      console.warn(" No matching chunks found in Qdrant for fileId:", fileId);
-      return NextResponse.json(
-        { error: "No matching chunks found in Qdrant" },
-        { status: 404 }
-      );
-    }
-
-    const context = searchResult
-      .map((r, i) => {
-        const payload = r.payload;
-        return `---\nChunk ${i + 1}\nFile: ${payload?.fileId}\nContent: ${
-          payload?.content || ""
-        }\n---`;
-      })
-      .join("\n\n")
-      .slice(0, 3000);
-
-    console.log("🤖 Starting Gemini model response stream...");
-
-    const stream = createUIMessageStream({
-      execute: async ({ writer }) => {
-        const model = google("gemini-2.5-flash");
-
-        const finalPrompt = PROMPT.replace("{context}", context).replace(
-          "{conversationText}",
-          conversationText
-        );
-
-        console.log("📜 Final LLM prompt length:", finalPrompt.length);
-
-        const result = streamText({
-          model,
-          prompt: finalPrompt,
-          temperature: 0.3,
-          experimental_transform: smoothStream(),
-        });
-
-        writer.merge(result.toUIMessageStream());
-
-        const fullText = await result.text;
-        console.log("✅ [Gemini Final Response]:", fullText);
-
-        if (fullText) {
-          console.log("💾 Saving LLM response to Prisma...");
-          await prisma.analysis.create({
-            data: {
-              fileId,
-              userId,
-              summary: fullText,
-            },
-          });
-          console.log("✅ Response saved successfully.");
-        }
-      },
+    return NextResponse.json({
+      success: true,
+      analysis: { id: savedAnalysis.id },
     });
-
-    console.log("✅ Returning streamed response to client.");
-    return createUIMessageStreamResponse({ stream });
   } catch (err: any) {
     console.error("❌ RAG Analysis Error:", err);
-    let detailedError = "No response data from Qdrant.";
-    if (err.response?.data) {
-      detailedError = JSON.stringify(err.response.data, null, 2);
-    } else if (err.data) {
-      detailedError = JSON.stringify(err.data, null, 2);
-    }
-
-    console.error("🧾 Qdrant Error Response:", detailedError);
     return NextResponse.json(
       { error: err.message || "Internal Server Error" },
       { status: 500 }
