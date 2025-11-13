@@ -87,6 +87,7 @@ const AnalyticsClientPage = ({
 
   const [totalWords, setTotalWords] = useState<number | null>(null);
   const [loadingWords, setLoadingWords] = useState(true);
+  const [loadingActionItems, setLoadingActionItems] = useState(true);
 
   const [talkListenRatio, setTalkListenRatio] = useState<{
     avgTalk: string;
@@ -94,6 +95,21 @@ const AnalyticsClientPage = ({
     message: string;
   } | null>(null);
   const [loadingRatio, setLoadingRatio] = useState(true);
+
+  useEffect(() => {
+    const fetchActionItems = async () => {
+      try {
+        setLoadingActionItems(true);
+        const res = await axios.get("/api/analysis/actionItems");
+        setActionItems(res.data.actionItems);
+      } catch (err) {
+        console.error("Failed to fetch action items:", err);
+      } finally {
+        setLoadingActionItems(false);
+      }
+    };
+    fetchActionItems();
+  }, []);
 
   useEffect(() => {
     const fetchTotalWords = async () => {
@@ -158,7 +174,6 @@ const AnalyticsClientPage = ({
           </p>
         </div>
 
-        {/* Action Items Card */}
         <Card className="border-primary/20 hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
           <CardHeader>
             <CardTitle className="text-2xl">My Pending Action Items</CardTitle>
@@ -168,7 +183,11 @@ const AnalyticsClientPage = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {actionItems.filter((item) => !item.completed).length > 0 ? (
+              {loadingActionItems ? (
+                <div className="flex justify-center py-6">
+                  <ClipLoader color="#4f46e5" size={28} />
+                </div>
+              ) : actionItems.filter((item) => !item.completed).length > 0 ? (
                 actionItems
                   .filter((item) => !item.completed)
                   .map((item) => (
@@ -178,7 +197,15 @@ const AnalyticsClientPage = ({
                     >
                       <Checkbox
                         checked={item.completed}
-                        onCheckedChange={() => toggleActionItem(item.id)}
+                        onCheckedChange={() =>
+                          setActionItems((prev) =>
+                            prev.map((todo) =>
+                              todo.id === item.id
+                                ? { ...todo, completed: !todo.completed }
+                                : todo
+                            )
+                          )
+                        }
                         className="mt-0.5 cursor-pointer"
                       />
                       <div className="flex-1">
