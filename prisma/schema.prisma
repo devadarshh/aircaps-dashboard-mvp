@@ -77,6 +77,7 @@ model File {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   analyses  Analysis[] @relation("FileAnalyses") 
+
 }
 
 model Analysis {

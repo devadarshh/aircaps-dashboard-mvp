@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Card,
   CardContent,
@@ -11,19 +12,46 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MessageSquare } from "lucide-react";
 
 interface TranscriptSectionProps {
-  transcript: any[];
+  fileId: string; // pass fileId when rendering component
 }
 
-export default function TranscriptSection({
-  transcript,
-}: TranscriptSectionProps) {
+export default function TranscriptSection({ fileId }: TranscriptSectionProps) {
   const [open, setOpen] = useState(false);
+  const [transcriptText, setTranscriptText] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTranscript = async () => {
+      try {
+        setLoading(true);
+        console.log("Fetching transcript for fileId:", fileId);
+        const res = await axios.get(`/api/files/${fileId}/transcript`);
+        console.log("Transcript API response:", res);
+
+        // Depending on your API response structure, fix this line:
+        setTranscriptText(
+          res.data.transcript || res.data || "No transcript available."
+        );
+      } catch (error: any) {
+        console.error(
+          "Failed to fetch transcript:",
+          error.response || error.message
+        );
+        setTranscriptText("Error loading transcript.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (fileId) fetchTranscript();
+  }, [fileId]);
 
   return (
     <>
@@ -34,38 +62,26 @@ export default function TranscriptSection({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            Full Conversation Transcript
+            Original Transcript (.txt)
           </CardTitle>
           <CardDescription>
-            Click to view the complete conversation
+            Click to view the uploaded transcript content
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          {transcript && transcript.length > 0 ? (
-            <div className="space-y-3 max-h-[180px] overflow-y-hidden relative">
-              {transcript.slice(0, 5).map((t, i) => (
-                <div key={i}>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {t.timestamp || "00:00"}
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {t.speaker || "User"}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed pl-8">
-                    {typeof t.text === "object"
-                      ? JSON.stringify(t.text)
-                      : t.text}
-                  </p>
-                </div>
-              ))}
+          {loading ? (
+            <p className="text-sm text-muted-foreground italic">
+              Loading transcript...
+            </p>
+          ) : transcriptText ? (
+            <div className="text-sm text-muted-foreground max-h-[150px] overflow-hidden relative whitespace-pre-wrap">
+              {transcriptText.slice(0, 400)}...
               <div className="absolute bottom-0 left-0 w-full h-16 bg-linear-to-t from-[#f8f7f5] to-transparent" />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground italic">
-              No transcript data available.
+              Transcript not found.
             </p>
           )}
           <p className="text-xs text-indigo-600 mt-3 font-medium">
@@ -78,38 +94,21 @@ export default function TranscriptSection({
         <DialogContent className="max-w-4xl bg-white border border-border/50 rounded-2xl p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+              <DialogDescription>
+                View the full text of the uploaded transcript.
+              </DialogDescription>
               <MessageSquare className="h-5 w-5 text-primary" />
-              Full Conversation Transcript
             </DialogTitle>
           </DialogHeader>
 
-          {transcript && transcript.length > 0 ? (
-            <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-              {transcript.map((t, i) => (
-                <div
-                  key={i}
-                  className="hover:bg-[#f7f5f2] p-3 rounded-lg transition-colors"
-                >
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {t.timestamp || "00:00"}
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {t.speaker || "User"}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed pl-8">
-                    {typeof t.text === "object"
-                      ? JSON.stringify(t.text)
-                      : t.text}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
+          {loading ? (
             <p className="text-sm text-muted-foreground italic mt-4">
-              Transcript unavailable for this conversation.
+              Loading transcript...
             </p>
+          ) : (
+            <div className="mt-4 text-sm text-gray-800 whitespace-pre-wrap max-h-[70vh] overflow-y-auto bg-gray-50 p-4 rounded-lg border border-gray-200">
+              {transcriptText}
+            </div>
           )}
         </DialogContent>
       </Dialog>

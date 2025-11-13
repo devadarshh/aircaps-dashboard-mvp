@@ -256,7 +256,7 @@ export default function ConversationDetailPage() {
 
             {/* Row 4: Detailed Transcript */}
             <div className="lg:col-span-12">
-              <TranscriptSection transcript={rawResponse.transcript || []} />
+              <TranscriptSection fileId={analysis.fileId} />
             </div>
           </div>
         </div>
