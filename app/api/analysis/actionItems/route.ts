@@ -1,3 +1,4 @@
+// pages/api/analysis/actionItems.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -12,33 +13,21 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: {
-        analyses: true,
-      },
+      include: { analyses: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Flatten todos from all analyses
-    const allTodos: {
-      id: string;
-      text: string;
-      conversationTitle: string;
-      completed: boolean;
-    }[] = [];
+    const allTodos: { text: string; conversationTitle: string }[] = [];
 
     user.analyses.forEach((analysis) => {
-      const todos = analysis.todos as
-        | { id: string; text: string; completed: boolean }[]
-        | null;
+      const todos = analysis.todos as string[] | null;
       if (todos) {
         todos.forEach((todo) => {
           allTodos.push({
-            id: todo.id,
-            text: todo.text,
-            completed: todo.completed,
+            text: todo,
             conversationTitle: analysis.title || "Untitled",
           });
         });

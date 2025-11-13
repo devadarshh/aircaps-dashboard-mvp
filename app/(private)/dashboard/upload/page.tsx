@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -130,6 +131,7 @@ const Upload = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-[#e9e6e2] p-4 sm:p-6 lg:p-8 space-y-6 transition-all">
+        {/* Header */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-gray-900">
             Upload Captions
@@ -156,27 +158,24 @@ const Upload = () => {
                   <Label htmlFor="file" className="text-base font-medium">
                     Caption File
                   </Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/60 transition-colors cursor-pointer relative">
-                    <input
-                      type="file"
-                      id="file"
-                      className="hidden"
-                      accept=".txt,.srt,.vtt,.pdf,.md"
-                      onChange={handleFileChange}
-                    />
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/60 transition-colors relative">
                     {!file ? (
-                      <label
-                        htmlFor="file"
-                        className="cursor-pointer flex flex-col items-center"
-                      >
-                        <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="font-medium mb-1 text-gray-700">
-                          Drop your file or click to browse
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Supports .txt file
-                        </p>
-                      </label>
+                      isUploading ? (
+                        <Skeleton className="h-32 w-full rounded-lg" />
+                      ) : (
+                        <label
+                          htmlFor="file"
+                          className="cursor-pointer flex flex-col items-center"
+                        >
+                          <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="font-medium mb-1 text-gray-700">
+                            Drop your file or click to browse
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Supports .txt file
+                          </p>
+                        </label>
+                      )
                     ) : (
                       <div className="flex items-center justify-between p-4 bg-muted rounded-md cursor-pointer">
                         <div className="flex items-center gap-3 text-left">
@@ -207,10 +206,7 @@ const Upload = () => {
                   disabled={isUploading || uploadSuccess || !file}
                 >
                   {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Uploading...
-                    </>
+                    <Skeleton className="h-6 w-full rounded-md" />
                   ) : uploadSuccess ? (
                     <>
                       <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -233,10 +229,7 @@ const Upload = () => {
                     disabled={isAnalyzing || analysisDone}
                   >
                     {isAnalyzing ? (
-                      <>
-                        <Brain className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
-                      </>
+                      <Skeleton className="h-6 w-full rounded-md" />
                     ) : analysisDone ? (
                       <>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -286,7 +279,7 @@ const Upload = () => {
                 },
               ].map(({ step, title, desc }) => (
                 <div key={step} className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+                  <div className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
                     {step}
                   </div>
                   <div>

@@ -19,6 +19,8 @@ import SentimentOverTime from "@/components/Analytics/SentimentOverTime";
 import ActionItems from "@/components/Analytics/ActionItems";
 import TranscriptSection from "@/components/Analytics/TranscriptSection";
 import AISummary from "@/components/Analytics/AISummary";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getToneColor } from "@/utils/getToneColor";
 
 interface TalkTimeItem {
   speaker: string;
@@ -50,33 +52,6 @@ interface Analysis {
   fileId?: string;
 }
 
-const getToneColor = (tone?: string) => {
-  switch (tone?.toLowerCase()) {
-    case "constructive":
-    case "collaborative":
-      return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
-    case "inquisitive":
-    case "curious":
-      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200";
-    case "empathetic":
-    case "personal":
-      return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200";
-    case "casual":
-    case "banter":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200";
-    case "tense":
-    case "conflict":
-      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
-    case "instructional":
-    case "educational":
-      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
-    case "transactional":
-      return "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
-  }
-};
-
 export default function ConversationDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -100,16 +75,50 @@ export default function ConversationDetailPage() {
     fetchAnalysis();
   }, [id]);
 
+  // --- Skeleton placeholders while loading ---
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[80vh] w-full">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-muted/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-muted-foreground animate-pulse text-sm">
-            Loading insights...
-          </p>
+      <DashboardLayout>
+        <div className="min-h-[80vh] w-full bg-[#F9FAFB] pb-20">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+            {/* Header Skeleton */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-8 w-64" />
+                  <Skeleton className="h-4 w-40" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-20 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            </div>
+
+            {/* Bento Grid Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* TalkTimeDistribution Skeleton */}
+              <Skeleton className="lg:col-span-4 h-64 rounded-xl" />
+
+              {/* SpeakingMetrics Skeleton */}
+              <Skeleton className="lg:col-span-8 h-64 rounded-xl" />
+
+              {/* AISummary Skeleton */}
+              <Skeleton className="lg:col-span-7 h-48 rounded-xl" />
+
+              {/* ActionItems Skeleton */}
+              <Skeleton className="lg:col-span-5 h-48 rounded-xl" />
+
+              {/* SentimentOverTime Skeleton */}
+              <Skeleton className="lg:col-span-12 h-48 rounded-xl" />
+
+              {/* TranscriptSection Skeleton */}
+              <Skeleton className="lg:col-span-12 h-40 rounded-xl" />
+            </div>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -125,7 +134,6 @@ export default function ConversationDetailPage() {
     );
 
   const { rawResponse } = analysis;
-
   const totalDuration =
     rawResponse.talkTimeDist?.reduce((a, b) => a + b.durationSec, 0) || 1;
   const sentimentOverTimeData =
@@ -171,7 +179,6 @@ export default function ConversationDetailPage() {
           {/* --- Header Section --- */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6">
             <div className="flex items-start gap-4">
-              {/* Back button hover */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -180,14 +187,11 @@ export default function ConversationDetailPage() {
               >
                 <ArrowLeft className="h-6 w-6" />
               </Button>
-
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
                     {analysis.title}
                   </h1>
-
-                  {/* Tone Badge with hover */}
                   <Badge
                     variant="outline"
                     className={`text-sm font-medium px-2.5 py-0.5 border transition-colors cursor-pointer ${getToneColor(
@@ -197,15 +201,17 @@ export default function ConversationDetailPage() {
                     {analysis.tone || "Neutral"}
                   </Badge>
                 </div>
-
-                {/* Meta Info */}
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-sm text-muted-foreground font-medium">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4" />
                     <span>
                       {new Date(analysis.createdAt).toLocaleDateString(
                         "en-US",
-                        { month: "long", day: "numeric", year: "numeric" }
+                        {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        }
                       )}
                     </span>
                   </div>
@@ -217,7 +223,6 @@ export default function ConversationDetailPage() {
               </div>
             </div>
 
-            {/* Share + More Buttons */}
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -243,30 +248,24 @@ export default function ConversationDetailPage() {
                 talkTimeDist={rawResponse.talkTimeDist || []}
               />
             </div>
-
             <div className="lg:col-span-8 h-full transition-transform hover:scale-[1.01]">
               <SpeakingMetrics keyMetricsData={keyMetricsData} />
             </div>
-
             <div className="lg:col-span-7 flex flex-col transition-transform hover:scale-[1.01]">
               <AISummary
                 summary={rawResponse.summary}
                 className="grow h-full"
               />
             </div>
-
             <div className="lg:col-span-5 flex flex-col transition-transform hover:scale-[1.01]">
               <ActionItems
                 todos={rawResponse.todos || []}
                 className="grow h-full"
               />
             </div>
-
             <div className="lg:col-span-12 transition-transform hover:scale-[1.01]">
               <SentimentOverTime sentimentOverTime={sentimentOverTimeData} />
             </div>
-
-            {/* --- Transcript --- */}
             <div className="lg:col-span-12 transition-transform hover:scale-[1.01] cursor-pointer">
               <TranscriptSection fileId={analysis.fileId!} />
             </div>
