@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { ClipLoader } from "react-spinners";
 import {
@@ -23,15 +24,40 @@ import {
 } from "@/components/ui/table";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 
+const getToneColor = (tone?: string) => {
+  switch (tone?.toLowerCase()) {
+    case "constructive":
+    case "collaborative":
+      return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
+    case "inquisitive":
+    case "curious":
+      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200";
+    case "empathetic":
+    case "personal":
+      return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200";
+    case "casual":
+    case "banter":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200";
+    case "tense":
+    case "conflict":
+      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
+    case "instructional":
+    case "educational":
+      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
+    case "transactional":
+      return "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
+  }
+};
+
 interface Conversation {
   id: string;
   title: string;
   date: string;
-  duration: string;
-  participants: string[];
-  actionItems: number;
+  tone?: string;
   status: "ready" | "processing";
-  talkRatio?: { you: number; others: number; label: string };
+  actionItems: number;
 }
 
 interface ActionItem {
@@ -53,8 +79,26 @@ const AnalyticsClientPage = ({
   mockConversations,
 }: AnalyticsClientPageProps) => {
   const router = useRouter();
-  const [conversations] = useState(mockConversations);
-  const [actionItems, setActionItems] = useState(mockActionItems);
+
+  const [conversations, setConversations] =
+    useState<Conversation[]>(mockConversations);
+  const [actionItems, setActionItems] = useState<ActionItem[]>(mockActionItems);
+  const [loadingConversations, setLoadingConversations] = useState(false);
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        setLoadingConversations(true);
+        const res = await axios.get("/api/analysis/recent");
+        setConversations(res.data.conversations);
+      } catch (err) {
+        console.error("Failed to fetch conversations:", err);
+      } finally {
+        setLoadingConversations(false);
+      }
+    };
+    fetchConversations();
+  }, []);
 
   const toggleActionItem = (id: string) => {
     setActionItems((items) =>
@@ -87,27 +131,28 @@ const AnalyticsClientPage = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {actionItems
-                .filter((item) => !item.completed)
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
-                  >
-                    <Checkbox
-                      checked={item.completed}
-                      onCheckedChange={() => toggleActionItem(item.id)}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1">
-                      <p className="text-foreground">{item.text}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        from: {item.conversationTitle}
-                      </p>
+              {actionItems.filter((item) => !item.completed).length > 0 ? (
+                actionItems
+                  .filter((item) => !item.completed)
+                  .map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
+                    >
+                      <Checkbox
+                        checked={item.completed}
+                        onCheckedChange={() => toggleActionItem(item.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <p className="text-foreground">{item.text}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          from: {item.conversationTitle}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              {actionItems.filter((item) => !item.completed).length === 0 && (
+                  ))
+              ) : (
                 <p className="text-center text-muted-foreground py-8">
                   No pending action items. Great work!
                 </p>
@@ -116,12 +161,13 @@ const AnalyticsClientPage = ({
           </CardContent>
         </Card>
 
-        {/* Insights */}
+        {/* Key Insights */}
         <div>
           <h2 className="text-xl font-semibold text-foreground mb-4">
             Key Insights
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Time */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -139,10 +185,9 @@ const AnalyticsClientPage = ({
                     </p>
                   </>
                 ) : (
-                  // ✅ Loader state
                   <div className="flex flex-col items-center justify-center h-[60px]">
                     <ClipLoader
-                      color="#4f46e5" // your theme’s indigo-600
+                      color="#4f46e5"
                       size={28}
                       speedMultiplier={0.8}
                     />
@@ -153,6 +198,8 @@ const AnalyticsClientPage = ({
                 )}
               </CardContent>
             </Card>
+
+            {/* Avg. Talk/Listen Ratio */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -168,6 +215,8 @@ const AnalyticsClientPage = ({
                 </p>
               </CardContent>
             </Card>
+
+            {/* Total Conversations */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -175,12 +224,16 @@ const AnalyticsClientPage = ({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">22</div>
+                <div className="text-3xl font-bold text-foreground">
+                  {conversations.length}
+                </div>
                 <p className="text-sm text-muted-foreground mt-2">
                   vs. 19 last week
                 </p>
               </CardContent>
             </Card>
+
+            {/* Average Duration */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -218,73 +271,73 @@ const AnalyticsClientPage = ({
               </Button>
             </div>
           </CardHeader>
+
           <CardContent className="px-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/30 bg-muted/30">
-                    <TableHead className="pl-6 font-semibold text-sm text-muted-foreground">
-                      Title
-                    </TableHead>
-                    <TableHead className="font-semibold text-sm text-muted-foreground">
-                      Date
-                    </TableHead>
-                    <TableHead className="font-semibold text-sm text-center text-muted-foreground">
-                      Action Items
-                    </TableHead>
-                    <TableHead className="w-28 text-center font-semibold text-sm text-muted-foreground pr-6">
-                      Details
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {conversations.map((c) => (
-                    <TableRow
-                      key={c.id}
-                      className="border-border/20 hover:bg-muted/30 transition-colors"
-                    >
-                      <TableCell className="pl-6 font-medium text-foreground">
-                        {c.title}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {c.date}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {c.status === "ready" ? (
-                          <Badge variant="secondary" className="font-medium">
-                            {c.actionItems} Pending
-                          </Badge>
-                        ) : (
+            {loadingConversations ? (
+              <div className="flex justify-center items-center py-10">
+                <ClipLoader color="#4f46e5" size={35} />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border/30 bg-muted/30">
+                      <TableHead className="pl-6 font-semibold text-sm text-muted-foreground">
+                        Title
+                      </TableHead>
+                      <TableHead className="font-semibold text-sm text-muted-foreground">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-sm text-center text-muted-foreground">
+                        Tone
+                      </TableHead>
+                      <TableHead className="w-28 text-center font-semibold text-sm text-muted-foreground pr-6">
+                        Details
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {conversations.map((c) => (
+                      <TableRow
+                        key={c.id}
+                        onClick={() =>
+                          router.push(`/dashboard/conversation/${c.id}`)
+                        }
+                        className="border-border/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                      >
+                        <TableCell className="pl-6 font-medium text-foreground">
+                          {c.title}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {c.date}
+                        </TableCell>
+                        <TableCell className="text-center">
                           <Badge
                             variant="outline"
-                            className="text-xs text-muted-foreground"
+                            className={`capitalize ${getToneColor(c.tone)}`}
                           >
-                            Processing
+                            {c.tone || "Unknown"}
                           </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center pr-6">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            router.push(`/dashboard/conversation/${c.id}`)
-                          }
-                          disabled={c.status === "processing"}
-                          className={`text-sm font-medium ${
-                            c.status === "ready"
-                              ? "hover:bg-primary hover:text-primary-foreground"
-                              : "opacity-50 cursor-not-allowed"
-                          }`}
-                        >
-                          {c.status === "ready" ? "View Details" : "Processing"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                        </TableCell>
+                        <TableCell className="text-center pr-6">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation(); 
+                              router.push(`/dashboard/conversation/${c.id}`);
+                            }}
+                            className="text-sm font-medium hover:bg-primary hover:text-primary-foreground"
+                          >
+                            View Details
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge"; // Import Badge
+import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Calendar,
@@ -45,34 +45,35 @@ interface RawResponse {
 interface Analysis {
   title: string;
   createdAt: string;
-  tone?: string; // Added tone field
+  tone?: string;
   rawResponse: RawResponse;
+  fileId?: string;
 }
 
 const getToneColor = (tone?: string) => {
   switch (tone?.toLowerCase()) {
     case "constructive":
     case "collaborative":
-      return "bg-green-100 text-green-800 border-green-200 hover:bg-green-100";
+      return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
     case "inquisitive":
     case "curious":
-      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100";
+      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200";
     case "empathetic":
     case "personal":
-      return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100";
+      return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200";
     case "casual":
     case "banter":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100";
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200";
     case "tense":
     case "conflict":
-      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-100";
+      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
     case "instructional":
     case "educational":
-      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100";
+      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
     case "transactional":
-      return "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-100";
+      return "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100";
+      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
   }
 };
 
@@ -170,30 +171,34 @@ export default function ConversationDetailPage() {
           {/* --- Header Section --- */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6">
             <div className="flex items-start gap-4">
+              {/* Back button hover */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => router.push("/dashboard/analytics")}
-                className="h-10 w-10 -ml-2 text-muted-foreground hover:text-foreground"
+                className="h-10 w-10 -ml-2 text-muted-foreground hover:text-primary transition-all hover:scale-105 cursor-pointer"
               >
                 <ArrowLeft className="h-6 w-6" />
               </Button>
+
               <div>
-                {/* Tone Badge Section */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
                     {analysis.title}
                   </h1>
 
+                  {/* Tone Badge with hover */}
                   <Badge
                     variant="outline"
-                    className={`text-sm font-medium px-2.5 py-0.5 border ${getToneColor(
+                    className={`text-sm font-medium px-2.5 py-0.5 border transition-colors cursor-pointer ${getToneColor(
                       analysis.tone || "curious"
                     )}`}
                   >
                     {analysis.tone || "Neutral"}
                   </Badge>
                 </div>
+
+                {/* Meta Info */}
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-sm text-muted-foreground font-medium">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4" />
@@ -211,11 +216,21 @@ export default function ConversationDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Share + More Buttons */}
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2 bg-white">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 bg-white hover:bg-gray-100 transition-colors cursor-pointer"
+              >
                 <Share2 className="h-4 w-4" /> Share
               </Button>
-              <Button variant="outline" size="icon" className="bg-white">
+              <Button
+                variant="outline"
+                size="icon"
+                className="bg-white hover:bg-gray-100 transition-colors cursor-pointer"
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </div>
@@ -223,40 +238,37 @@ export default function ConversationDetailPage() {
 
           {/* --- Bento Grid Layout --- */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Row 1: Talk Time & Speaking Metrics */}
-            <div className="lg:col-span-4 h-full">
+            <div className="lg:col-span-4 h-full transition-transform hover:scale-[1.01]">
               <TalkTimeDistribution
                 talkTimeDist={rawResponse.talkTimeDist || []}
               />
             </div>
-            <div className="lg:col-span-8 h-full">
+
+            <div className="lg:col-span-8 h-full transition-transform hover:scale-[1.01]">
               <SpeakingMetrics keyMetricsData={keyMetricsData} />
             </div>
 
-            {/* Row 2: AI Summary & Action Items */}
-            {/* Wrapped in div to ensure flex-col behavior if needed */}
-            <div className="lg:col-span-7 flex flex-col">
+            <div className="lg:col-span-7 flex flex-col transition-transform hover:scale-[1.01]">
               <AISummary
                 summary={rawResponse.summary}
                 className="grow h-full"
               />
             </div>
 
-            <div className="lg:col-span-5 flex flex-col">
+            <div className="lg:col-span-5 flex flex-col transition-transform hover:scale-[1.01]">
               <ActionItems
                 todos={rawResponse.todos || []}
                 className="grow h-full"
               />
             </div>
 
-            {/* Row 3: Sentiment Over Time */}
-            <div className="lg:col-span-12">
+            <div className="lg:col-span-12 transition-transform hover:scale-[1.01]">
               <SentimentOverTime sentimentOverTime={sentimentOverTimeData} />
             </div>
 
-            {/* Row 4: Detailed Transcript */}
-            <div className="lg:col-span-12">
-              <TranscriptSection fileId={analysis.fileId} />
+            {/* --- Transcript --- */}
+            <div className="lg:col-span-12 transition-transform hover:scale-[1.01] cursor-pointer">
+              <TranscriptSection fileId={analysis.fileId!} />
             </div>
           </div>
         </div>
