@@ -83,9 +83,20 @@ export async function POST(req: NextRequest) {
 You are an expert conversation coach with 50+ years of experience. My name is Adarsh. 
 Analyze the following conversation chunks and return a JSON object **strictly in the format below**:
 
+**Task 1: Categorize the Tone**
+Classify the overall conversation into EXACTLY ONE of these categories:
+1. "Constructive" (Planning, problem-solving, agreement)
+2. "Inquisitive" (Learning, interviewing, deep discovery)
+3. "Empathetic" (Emotional support, bonding, personal)
+4. "Casual" (Small talk, banter, lighthearted)
+5. "Tense" (Disagreement, conflict, heated)
+6. "Instructional" (Teaching, mentoring, lecturing)
+7. "Transactional" (Logistics, ordering, brief business)
+
 {
   "title": "Short summary of the conversation",
   "summary": "Detailed summary",
+  "tone": "One of the 7 categories listed above",
   "todos": ["Follow up on X", "Schedule next call"],
   "talkListenRatio": 0.62,
   "talkTimeDist": [
@@ -128,7 +139,6 @@ ${conversationText}
 
     const llmOutput = await result.text;
 
-    // ✅ Step 4: Parse LLM JSON
     let parsedData;
     try {
       parsedData = await parser.parse(llmOutput);
@@ -148,6 +158,7 @@ ${conversationText}
         title: finalTitle,
         summary: parsedData.summary,
         todos: parsedData.todos,
+        tone: parsedData.tone,
         talkListenRatio: parsedData.talkListenRatio,
         talkTimeDist: parsedData.talkTimeDist,
         speakingMetrics: parsedData.speakingMetrics,

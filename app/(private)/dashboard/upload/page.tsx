@@ -32,7 +32,7 @@ const Upload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileId, setFileId] = useState<string>("");
   const [conversationText, setConversationText] = useState<string>("");
-  const [sessionTitle, setSessionTitle] = useState<string>("");
+  const [sessionTitle] = useState<string>("");
   const { toast } = useToast();
   const router = useRouter();
 
@@ -174,7 +174,7 @@ const Upload = () => {
                           Drop your file or click to browse
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Supports .txt, .srt, .vtt, .pdf, .md
+                          Supports .txt file
                         </p>
                       </label>
                     ) : (

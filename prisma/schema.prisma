@@ -89,7 +89,8 @@ model Analysis {
   title String?
   summary   String  
   todos     Json?    
-  tips      Json?   
+  tips      Json?  
+  tone      String? 
   talkListenRatio Float?       
   talkTimeDist    Json?          
   speakingMetrics Json?          
