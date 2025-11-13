@@ -30,7 +30,9 @@ import {
   YAxis,
   TooltipProps,
 } from "recharts";
+import axios from "axios";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
+import { useEffect, useState } from "react";
 
 // --- MOCK DATA (Same as before) ---
 const talkTimeData = [
@@ -99,6 +101,40 @@ export default function ConversationDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
+
+  const [analysis, setAnalysis] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchAnalysis = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await axios.get(`/api/analysis/${id}`);
+        console.log(res.data.analysis);
+        setAnalysis(res.data.analysis);
+      } catch (err) {
+        console.error("Error fetching analysis:", err);
+        if (err.response?.status === 404) {
+          setError("Analysis not found");
+        } else {
+          setError("Failed to fetch analysis");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalysis();
+  }, [id]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+  if (!analysis) return <div>No analysis available</div>;
 
   return (
     <DashboardLayout>
