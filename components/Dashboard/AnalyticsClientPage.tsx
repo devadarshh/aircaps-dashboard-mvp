@@ -85,6 +85,31 @@ const AnalyticsClientPage = ({
   const [actionItems, setActionItems] = useState<ActionItem[]>(mockActionItems);
   const [loadingConversations, setLoadingConversations] = useState(false);
 
+  const [totalWords, setTotalWords] = useState<number | null>(null);
+  const [loadingWords, setLoadingWords] = useState(true);
+
+  const [talkListenRatio, setTalkListenRatio] = useState<{
+    avgTalk: string;
+    avgListen: string;
+    message: string;
+  } | null>(null);
+  const [loadingRatio, setLoadingRatio] = useState(true);
+
+  useEffect(() => {
+    const fetchTotalWords = async () => {
+      try {
+        setLoadingWords(true);
+        const res = await axios.get("/api/analysis/totalWords");
+        setTotalWords(res.data.totalWords);
+      } catch (err) {
+        console.error("Failed to fetch total words:", err);
+      } finally {
+        setLoadingWords(false);
+      }
+    };
+    fetchTotalWords();
+  }, []);
+
   useEffect(() => {
     const fetchConversations = async () => {
       try {
@@ -98,6 +123,18 @@ const AnalyticsClientPage = ({
       }
     };
     fetchConversations();
+    const fetchTalkListenRatio = async () => {
+      try {
+        setLoadingRatio(true);
+        const res = await axios.get("/api/analysis/talkListenRatio");
+        setTalkListenRatio(res.data);
+      } catch (err) {
+        console.error("Failed to fetch talk/listen ratio:", err);
+      } finally {
+        setLoadingRatio(false);
+      }
+    };
+    fetchTalkListenRatio();
   }, []);
 
   const toggleActionItem = (id: string) => {
@@ -121,8 +158,8 @@ const AnalyticsClientPage = ({
           </p>
         </div>
 
-        {/* Action Items */}
-        <Card className="border-primary/20">
+        {/* Action Items Card */}
+        <Card className="border-primary/20 hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
           <CardHeader>
             <CardTitle className="text-2xl">My Pending Action Items</CardTitle>
             <CardDescription>
@@ -137,12 +174,12 @@ const AnalyticsClientPage = ({
                   .map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
+                      className="flex items-start gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors cursor-pointer"
                     >
                       <Checkbox
                         checked={item.completed}
                         onCheckedChange={() => toggleActionItem(item.id)}
-                        className="mt-0.5"
+                        className="mt-0.5 cursor-pointer"
                       />
                       <div className="flex-1">
                         <p className="text-foreground">{item.text}</p>
@@ -168,7 +205,7 @@ const AnalyticsClientPage = ({
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Time */}
-            <Card>
+            <Card className="hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Time (Last 7 Days)
@@ -199,25 +236,42 @@ const AnalyticsClientPage = ({
               </CardContent>
             </Card>
 
-            {/* Avg. Talk/Listen Ratio */}
-            <Card>
+            <Card className="hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Avg. Talk/Listen Ratio
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  45% / 55%
-                </div>
-                <p className="text-sm text-primary mt-2">
-                  You are listening 5% more. Great!
-                </p>
+                {loadingRatio ? (
+                  <div className="flex flex-col items-center justify-center h-[60px]">
+                    <ClipLoader
+                      color="#4f46e5"
+                      size={28}
+                      speedMultiplier={0.8}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Fetching data...
+                    </p>
+                  </div>
+                ) : talkListenRatio ? (
+                  <>
+                    <div className="text-3xl font-bold text-foreground">
+                      {talkListenRatio.avgTalk} / {talkListenRatio.avgListen}
+                    </div>
+                    <p className="text-sm text-primary mt-2">
+                      {talkListenRatio.message}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    No data available
+                  </p>
+                )}
               </CardContent>
             </Card>
-
             {/* Total Conversations */}
-            <Card>
+            <Card className="hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Conversations (Last 7 Days)
@@ -233,25 +287,41 @@ const AnalyticsClientPage = ({
               </CardContent>
             </Card>
 
-            {/* Average Duration */}
-            <Card>
+            <Card className="hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Average Duration
+                  Total Words (Last 7 Days)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">28 min</div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Your longest was 75 min (Project Sync)
-                </p>
+                {loadingWords ? (
+                  <div className="flex flex-col items-center justify-center h-[60px]">
+                    <ClipLoader
+                      color="#4f46e5"
+                      size={28}
+                      speedMultiplier={0.8}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Fetching data...
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-foreground">
+                      {totalWords?.toLocaleString() || 0}
+                    </div>
+                    <p className="text-sm text-primary mt-2">
+                      +20% from last week
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Conversations */}
-        <Card>
+        {/* Recent Conversations */}
+        <Card className="hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
@@ -265,7 +335,7 @@ const AnalyticsClientPage = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-sm font-medium"
+                className="text-sm font-medium cursor-pointer"
               >
                 View All
               </Button>
@@ -303,7 +373,7 @@ const AnalyticsClientPage = ({
                         onClick={() =>
                           router.push(`/dashboard/conversation/${c.id}`)
                         }
-                        className="border-border/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                        className="border-border/20 hover:bg-muted/30 hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer"
                       >
                         <TableCell className="pl-6 font-medium text-foreground">
                           {c.title}
@@ -314,7 +384,9 @@ const AnalyticsClientPage = ({
                         <TableCell className="text-center">
                           <Badge
                             variant="outline"
-                            className={`capitalize ${getToneColor(c.tone)}`}
+                            className={`capitalize ${getToneColor(
+                              c.tone
+                            )} cursor-pointer`}
                           >
                             {c.tone || "Unknown"}
                           </Badge>
@@ -324,10 +396,10 @@ const AnalyticsClientPage = ({
                             variant="outline"
                             size="sm"
                             onClick={(e) => {
-                              e.stopPropagation(); 
+                              e.stopPropagation();
                               router.push(`/dashboard/conversation/${c.id}`);
                             }}
-                            className="text-sm font-medium hover:bg-primary hover:text-primary-foreground"
+                            className="text-sm font-medium hover:bg-primary hover:text-primary-foreground cursor-pointer"
                           >
                             View Details
                           </Button>
