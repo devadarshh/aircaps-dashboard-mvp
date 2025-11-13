@@ -36,7 +36,6 @@ const Upload = () => {
   const { toast } = useToast();
   const router = useRouter();
 
-  // handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
@@ -45,7 +44,6 @@ const Upload = () => {
     setAnalysisDone(false);
   };
 
-  // handle upload logic
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
@@ -84,7 +82,6 @@ const Upload = () => {
     }
   };
 
-  // handle analyze logic
   const handleAnalyze = async () => {
     if (!conversationText || !fileId) {
       toast({
@@ -98,7 +95,6 @@ const Upload = () => {
       setIsAnalyzing(true);
       toast({ title: "🧠 Analyzing...", description: "Processing your file." });
 
-      // 🔹 POST request to backend for analysis
       const res = await axios.post("/api/analyze", {
         fileId,
         conversationText,
@@ -107,7 +103,7 @@ const Upload = () => {
 
       if (!res.data.success) throw new Error("Analysis failed");
 
-      const analysisId = res.data.analysis.id; // ✅ get analysisId from response
+      const analysisId = res.data.analysis.id;
 
       toast({
         title: "✅ Analysis Complete",
@@ -116,7 +112,6 @@ const Upload = () => {
 
       setAnalysisDone(true);
 
-      // 🔹 Redirect to the analysis page instead of fileId
       setTimeout(() => {
         router.push(`/dashboard/conversation/${analysisId}`);
       }, 1500);
@@ -134,41 +129,34 @@ const Upload = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-[#e9e6e2] p-6 lg:p-8 space-y-6">
+      <div className="min-h-screen bg-[#e9e6e2] p-4 sm:p-6 lg:p-8 space-y-6 transition-all">
         <div>
-          <h1 className="text-3xl font-semibold mb-2">Upload Captions</h1>
-          <p className="text-muted-foreground">
-            Upload and process your live caption sessions
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-gray-900">
+            Upload Captions
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Upload and process your live caption sessions.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Upload Section */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 shadow-md rounded-2xl">
             <CardHeader>
-              <CardTitle>Upload Session Data</CardTitle>
+              <CardTitle className="text-xl">Upload Session Data</CardTitle>
               <CardDescription>
-                Upload your caption files or paste session information
+                Upload your caption files or paste session information.
               </CardDescription>
             </CardHeader>
 
             <CardContent>
               <form onSubmit={handleUpload} className="space-y-6">
-                {/* Session Title */}
-                <div className="space-y-2">
-                  <Label htmlFor="title">Session Title (optional)</Label>
-                  <Input
-                    id="title"
-                    placeholder="e.g., Morning Team Meeting"
-                    value={sessionTitle}
-                    onChange={(e) => setSessionTitle(e.target.value)}
-                  />
-                </div>
-
                 {/* File Upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="file">Caption File</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer relative">
+                  <Label htmlFor="file" className="text-base font-medium">
+                    Caption File
+                  </Label>
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/60 transition-colors cursor-pointer relative">
                     <input
                       type="file"
                       id="file"
@@ -177,9 +165,12 @@ const Upload = () => {
                       onChange={handleFileChange}
                     />
                     {!file ? (
-                      <label htmlFor="file" className="cursor-pointer">
+                      <label
+                        htmlFor="file"
+                        className="cursor-pointer flex flex-col items-center"
+                      >
                         <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="font-medium mb-1">
+                        <p className="font-medium mb-1 text-gray-700">
                           Drop your file or click to browse
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -187,7 +178,7 @@ const Upload = () => {
                         </p>
                       </label>
                     ) : (
-                      <div className="flex items-center justify-between p-4 bg-muted rounded-md">
+                      <div className="flex items-center justify-between p-4 bg-muted rounded-md cursor-pointer">
                         <div className="flex items-center gap-3 text-left">
                           <FileText className="h-6 w-6 text-primary" />
                           <div>
@@ -212,7 +203,7 @@ const Upload = () => {
                 {/* Upload Button */}
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full cursor-pointer transition-all hover:scale-[1.02]"
                   disabled={isUploading || uploadSuccess || !file}
                 >
                   {isUploading ? (
@@ -238,7 +229,7 @@ const Upload = () => {
                   <Button
                     type="button"
                     onClick={handleAnalyze}
-                    className="w-full"
+                    className="w-full cursor-pointer transition-all hover:scale-[1.02]"
                     disabled={isAnalyzing || analysisDone}
                   >
                     {isAnalyzing ? (
@@ -264,27 +255,34 @@ const Upload = () => {
           </Card>
 
           {/* Quick Guide */}
-          <Card>
+          <Card className="shadow-md rounded-2xl">
             <CardHeader>
-              <CardTitle>Quick Guide</CardTitle>
-              <CardDescription>How to upload your sessions</CardDescription>
+              <CardTitle className="text-xl">Quick Guide</CardTitle>
+              <CardDescription>
+                How to upload and analyze your sessions
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
                 {
                   step: 1,
                   title: "Export from AirCaps",
-                  desc: "Get your caption file from your glasses",
+                  desc: "Get your caption file from your glasses or device.",
                 },
                 {
                   step: 2,
-                  title: "Add Details",
-                  desc: "Provide a title and optional notes",
+                  title: "Upload File",
+                  desc: "Select your caption file and click on 'Upload Session'.",
                 },
                 {
                   step: 3,
-                  title: "Process & Analyze",
-                  desc: "We'll analyze your session automatically",
+                  title: "Click Analyze",
+                  desc: "After upload, click on 'Analyze Session' to process your captions.",
+                },
+                {
+                  step: 4,
+                  title: "View Insights",
+                  desc: "Once analysis completes, view your conversation analytics instantly.",
                 },
               ].map(({ step, title, desc }) => (
                 <div key={step} className="flex gap-3">
@@ -297,10 +295,11 @@ const Upload = () => {
                   </div>
                 </div>
               ))}
+
               <div className="pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">
-                  Processing typically takes 30–60 seconds. You’ll be able to
-                  view analytics immediately after.
+                  ⏱️ Processing typically takes 30–60 seconds. You can access
+                  analytics immediately after completion.
                 </p>
               </div>
             </CardContent>
