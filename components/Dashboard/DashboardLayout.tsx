@@ -1,11 +1,12 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Upload, Settings, LogOut } from "lucide-react";
+import { BarChart3, Upload, Settings, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { signOut } from "next-auth/react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const pathname = usePathname();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
     { icon: BarChart3, label: "Analytics", path: "/dashboard/analytics" },
@@ -21,32 +23,61 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { icon: Settings, label: "Settings", path: "/dashboard/settings" },
   ];
 
-  const handleLogout = () => {
-    router.push("/"); // redirect to home
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/" }); 
   };
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-        <div className="p-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-sidebar-primary rounded-lg">
-              <Image
-                src="/logo.svg"
-                alt="AirCaps Logo"
-                width={30}
-                height={30}
-                className="object-contain"
-              />
-            </div>
-            <span className="text-lg font-semibold text-sidebar-foreground">
+      {/* Mobile Top Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-sidebar border-b border-sidebar-border p-4 md:hidden">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            className="p-2 hover:bg-sidebar-accent transition"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-6 w-6 text-sidebar-foreground" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Image
+              src="/logo.svg"
+              alt="AirCaps Logo"
+              width={28}
+              height={28}
+              className="object-contain"
+            />
+            <span className="font-semibold text-sidebar-foreground">
               AirCaps
             </span>
           </div>
         </div>
+      </header>
 
-        <nav className="flex-1 p-4 space-y-2">
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 w-64 bg-sidebar border-r border-sidebar-border flex flex-col transform transition-transform duration-300 ease-in-out z-40",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "md:translate-x-0 md:static md:flex"
+        )}
+      >
+        <div className="hidden md:flex items-center gap-3 p-6 border-b border-sidebar-border cursor-pointer hover:opacity-90 transition">
+          <div className="p-2 bg-sidebar-primary rounded-lg">
+            <Image
+              src="/logo.svg"
+              alt="AirCaps Logo"
+              width={30}
+              height={30}
+              className="object-contain"
+            />
+          </div>
+          <span className="text-lg font-semibold text-sidebar-foreground">
+            AirCaps
+          </span>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2 mt-12 md:mt-0">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.path;
@@ -56,10 +87,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 key={item.path}
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent",
-                  isActive && "bg-sidebar-accent"
+                  "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-white transition-all duration-200 active:scale-95 cursor-pointer",
+                  isActive && "bg-sidebar-accent text-white shadow-lg"
                 )}
-                onClick={() => router.push(item.path)}
+                onClick={() => {
+                  router.push(item.path);
+                  setSidebarOpen(false);
+                }}
               >
                 <Icon className="h-5 w-5" />
                 {item.label}
@@ -71,8 +105,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="p-4 border-t border-sidebar-border">
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent"
-            onClick={handleLogout}
+            className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-red-600 hover:text-white transition-all duration-200 active:scale-95 cursor-pointer"
+            onClick={() => {
+              handleLogout();
+              setSidebarOpen(false);
+            }}
           >
             <LogOut className="h-5 w-5" />
             Logout
@@ -80,8 +117,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main content */}
+      <main className="flex-1 overflow-auto pt-16 md:pt-0">{children}</main>
     </div>
   );
 };
