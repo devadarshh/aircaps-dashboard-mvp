@@ -44,12 +44,13 @@ const AnalyticsClientPage = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [actionRes, convRes, talkListenRes,totalWordsRes] = await Promise.all([
-          axios.get("/api/analysis/actionItems"),
-          axios.get("/api/analysis/recent"),
-          axios.get("/api/analysis/talkListenRatio"),
-          axios.get("/api/analysis/totalWords"),
-        ]);
+        const [actionRes, convRes, talkListenRes, totalWordsRes] =
+          await Promise.all([
+            axios.get("/api/analysis/actionItems"),
+            axios.get("/api/analysis/recent"),
+            axios.get("/api/analysis/talkListenRatio"),
+            axios.get("/api/analysis/totalWords"),
+          ]);
 
         const formattedActionItems = (
           actionRes.data.actionItems as {
@@ -67,9 +68,11 @@ const AnalyticsClientPage = ({
         setConversations(convRes.data.conversations || []);
 
         if (talkListenRes.data) {
-          setTalkListenRatio(
-            `${talkListenRes.data.avgTalk} / ${talkListenRes.data.avgListen}`
-          );
+          const avgTalk = talkListenRes.data.avgTalk ?? 0;
+          const avgListen = talkListenRes.data.avgListen ?? 0;
+          setTalkListenRatio(`${avgTalk} / ${avgListen}`);
+        } else {
+          setTalkListenRatio("0 / 0");
         }
         if (totalWordsRes.data) {
           setTotalWords(totalWordsRes.data.totalWords || 0);

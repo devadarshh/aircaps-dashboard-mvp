@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       .slice(0, 3000);
 
     const parser = new JsonOutputParser();
-    const formatInstructions = parser.getFormatInstructions();
+    parser.getFormatInstructions();
     const userName = session.user.name || "User";
 
     const PROMPT = `
@@ -169,10 +169,10 @@ ${conversationText}
       success: true,
       analysis: { id: savedAnalysis.id },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("RAG Analysis Error:", err);
     return NextResponse.json(
-      { error: err.message || "Internal Server Error" },
+      { error: err || "Internal Server Error" },
       { status: 500 }
     );
   }

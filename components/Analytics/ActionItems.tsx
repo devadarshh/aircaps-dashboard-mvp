@@ -7,11 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react"; 
+import { CheckCircle2 } from "lucide-react";
+
+type TodoItem = string | Record<string, unknown>;
 
 interface ActionItemsProps {
-  todos: any[];
-  className?: string; 
+  todos: TodoItem[];
+  className?: string;
 }
 
 export default function ActionItems({ todos, className }: ActionItemsProps) {

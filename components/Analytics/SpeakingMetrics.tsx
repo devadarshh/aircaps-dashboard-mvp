@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import {
   ResponsiveContainer,
   BarChart,
@@ -17,18 +18,42 @@ import {
   Tooltip,
   Legend,
   Rectangle,
+  TooltipProps,
 } from "recharts";
 
 const PRIMARY_COLOR = "#4F46E5";
 const IDEAL_COLOR = "#C4B5FD";
 const HOVER_BG_COLOR = "#E0E7FF";
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+
+interface MetricData {
+  metric: string;
+  value: number;
+  ideal: number;
+  fullMark: number;
+}
+
+interface NormalizedData extends MetricData {
+  originalValue: number;
+  valuePercent: number;
+  idealPercent: number;
+}
+
+interface CustomTooltipProps extends TooltipProps<number, string> {
+  payload?: {
+    payload: NormalizedData;
+  }[];
+}
+
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+
     return (
       <div className="bg-white p-3 border border-indigo-100 shadow-xl rounded-lg text-xs">
         <p className="font-bold mb-2 text-gray-900">{data.metric}</p>
+
         <div className="space-y-1">
           <p
             className="flex justify-between gap-4"
@@ -37,10 +62,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <span className="font-medium">Your Score:</span>
             <span className="font-bold text-base">{data.originalValue}</span>
           </p>
+
           <p className="text-gray-500 flex justify-between gap-4">
             <span>Ideal:</span>
             <span className="font-semibold">{data.ideal}</span>
           </p>
+
           <p className="text-gray-400 flex justify-between gap-4 border-t border-gray-100 pt-1 mt-1">
             <span>Max Possible:</span>
             <span>{data.fullMark}</span>
@@ -49,20 +76,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       </div>
     );
   }
+
   return null;
 };
 
 export default function SpeakingMetrics({
   keyMetricsData,
 }: {
-  keyMetricsData: {
-    metric: string;
-    value: number;
-    ideal: number;
-    fullMark: number;
-  }[];
+  keyMetricsData: MetricData[];
 }) {
-  const normalizedData = keyMetricsData.map((item) => ({
+  const normalizedData: NormalizedData[] = keyMetricsData.map((item) => ({
     ...item,
     originalValue: item.value,
     valuePercent: Math.min((item.value / item.fullMark) * 100, 100),

@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AirCaps Dashboard MVP
 
-## Getting Started
+AirCaps Dashboard MVP is a minimal viable product for managing, uploading, and analyzing live caption sessions captured via AirCaps Smart Glasses. The dashboard enables real-time transcription, analytics, and actionable insights for conversations.
 
-First, run the development server:
+**🌐 Live Demo:** [Access Aircaps Dashboard]()  
+**🎬 Project Walkthrough:** [Watch on Loom]()
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✅ Core Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- 📤 **Upload & Process Captions** – Upload .txt caption files and process them asynchronously.
+- 🧠 **Conversation Analysis** – Generate insights, extract action items, and identify talk/listen ratios.
+- 📊 **Key Metrics Dashboard** – Track total words, conversation duration, and activity trends.
+- 🗂️ **Recent Conversations Table** – See your latest sessions with tone, status, and analysis results.
+- 📊 **Quick Guide** – Step-by-step instructions for using the dashboard efficiently.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### **Client (Frontend)**
 
-## Learn More
+- ⚛️ **Next.js** – React-based framework for server-side rendering and dynamic client-side interactivity
+- 🎨 **TailwindCSS, Lucide Icons, Shadcn UI, Animate.css**
+- 📝 **React Hook Form & Yup** – Form handling and validation
+- 🌐 **Axios** – API requests and data fetching
+- 🔒 **NextAuth** – Authentication and user management
 
-To learn more about Next.js, take a look at the following resources:
+### **Server (Backend)**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- ⚡ **Next.js** – Lightweight and flexible backend framework
+- 🗄 **PostgreSQL + Prisma ORM** – Relational database with schema management
+- 🛡 **Zod** – Request validation
+- 🌱 **Dotenv** – Environment variable management
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📸 Screenshots
 
-## Deploy on Vercel
+![Backend Architecture](apps/web/assets/screenshots/landing_page.png)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Landing Page
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+![Landing Page](apps/web/assets/screenshots/landing_page.png)
+a
+### Sign In Page
+
+![Sign In Page](apps/web/assets/screenshots/sign_in_page.png)
+
+### Organization Page
+
+![Organization Page](apps/web/assets/screenshots/organizaions_page.png)
+
+### Board Page
+
+![Board Page](apps/web/assets/screenshots/board_page.png)
+
+### Card Page
+
+![Card Page](apps/web/assets/screenshots/card_modal.png)
+
+### Settings Page
+
+![Settings Page](apps/web/assets/screenshots/settings_page.png)
+
+### Billing Page
+
+![Billing Page](apps/web/assets/screenshots/pro_modal.png)
+
+### Activity Page
+
+![Activity Page](apps/web/assets/screenshots/activity_page.png)
+
+## 📄 License
+
+This project is licensed under a **Custom Personal Use License** — you may view and learn from the code, but **commercial use, redistribution, or claiming authorship is strictly prohibited**.  
+See the full [LICENSE](./LICENSE) for details.

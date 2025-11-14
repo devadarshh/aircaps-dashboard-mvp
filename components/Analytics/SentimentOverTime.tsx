@@ -18,21 +18,27 @@ import {
   Tooltip,
   TooltipProps,
 } from "recharts";
+import type { Payload } from "recharts/types/component/DefaultTooltipContent";
 
-const CHART_COLOR = "#4F46E5"; 
-const GRID_COLOR = "#E0E7FF"; 
-const TEXT_COLOR = "#6B7280"; 
+const CHART_COLOR = "#4F46E5";
+const GRID_COLOR = "#E0E7FF";
+const TEXT_COLOR = "#6B7280";
 
+interface SentimentData {
+  time: string;
+  sentiment: number;
+}
 const CustomSentimentTooltip = ({
   active,
   payload,
   label,
-}: TooltipProps<number, string>) => {
+}: TooltipProps<number, string> & {
+  payload?: Payload<number, string>[];
+  label?: string | number;
+}) => {
   if (active && payload && payload.length) {
-    const value =
-      typeof payload[0].value === "object"
-        ? JSON.stringify(payload[0].value)
-        : payload[0].value;
+    const value = payload[0].value;
+
     return (
       <div className="p-3 bg-white border border-indigo-100 shadow-xl rounded-lg text-xs">
         <p className="font-medium text-gray-500 mb-1">{label}</p>
@@ -48,7 +54,7 @@ const CustomSentimentTooltip = ({
 export default function SentimentOverTime({
   sentimentOverTime,
 }: {
-  sentimentOverTime: any[];
+  sentimentOverTime: SentimentData[];
 }) {
   return (
     <Card className="shadow-sm border border-border/50 hover:shadow-md transition-shadow cursor-pointer md:col-span-2 xl:col-span-1">

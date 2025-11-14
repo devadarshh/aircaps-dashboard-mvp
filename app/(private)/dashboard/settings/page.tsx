@@ -17,9 +17,14 @@ import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface User {
+  name: string;
+  email: string;
+}
+
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [autoAnalysis, setAutoAnalysis] = useState(true);

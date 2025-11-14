@@ -39,10 +39,10 @@ export async function GET(
 
     const text = await data.text();
     return NextResponse.json({ transcript: text });
-  } catch (err: any) {
+  } catch (err) {
     console.error(" Transcript fetch error:", err);
     return NextResponse.json(
-      { error: "Internal server error", details: err.message },
+      { error: "Internal server error", details: err },
       { status: 500 }
     );
   }

@@ -24,7 +24,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   ];
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/" }); 
+    await signOut({ callbackUrl: "/" });
   };
 
   return (

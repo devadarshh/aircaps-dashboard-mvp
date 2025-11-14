@@ -246,7 +246,7 @@ export default function ConversationDetailPage() {
             </div>
             <div className="lg:col-span-7 flex flex-col transition-transform hover:scale-[1.01]">
               <AISummary
-                summary={rawResponse.summary}
+                summary={rawResponse.summary || "No summary available"}
                 className="grow h-full"
               />
             </div>

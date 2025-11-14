@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/card";
 
 interface AISummaryProps {
-  summary: string;
+  summary?: string;
+  className?: string;
 }
 
 export default function AISummary({ summary }: AISummaryProps) {

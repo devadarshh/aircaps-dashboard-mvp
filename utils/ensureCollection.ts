@@ -9,8 +9,8 @@ export async function ensureCollectionExists() {
   try {
     collectionInfo = await qdrantClient.getCollection(COLLECTION_NAME);
     console.log(`[Qdrant] Collection ${COLLECTION_NAME} already exists.`);
-  } catch (err: any) {
-    if (err.status === 404) {
+  } catch (err) {
+    if (err) {
       console.log(
         `[Qdrant] Collection ${COLLECTION_NAME} does not exist. Creating...`
       );

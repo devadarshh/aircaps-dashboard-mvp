@@ -10,19 +10,31 @@ import {
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 
 const TALK_TIME_COLORS = [
-  "#4F46E5", 
-  "#818CF8", 
-  "#E0E7FF", 
-  "#C4B5FD", 
-  "#DDD6FE", 
-  "#A5B4FC", 
-  "#E9E6E2", 
+  "#4F46E5",
+  "#818CF8",
+  "#E0E7FF",
+  "#C4B5FD",
+  "#DDD6FE",
+  "#A5B4FC",
+  "#E9E6E2",
 ];
+
+interface TalkTimeItem {
+  speaker: string;
+  durationSec: number;
+}
+
+interface PieData {
+  name: string;
+  value: number;
+  color: string;
+  [key: string]: string | number;
+}
 
 export default function TalkTimeDistribution({
   talkTimeDist,
 }: {
-  talkTimeDist: any[];
+  talkTimeDist: TalkTimeItem[];
 }) {
   if (!talkTimeDist || talkTimeDist.length === 0) {
     return (
@@ -43,7 +55,7 @@ export default function TalkTimeDistribution({
   const totalDuration =
     talkTimeDist.reduce((sum, item) => sum + item.durationSec, 0) || 1;
 
-  const talkTimeData = talkTimeDist.map((item, index) => ({
+  const talkTimeData: PieData[] = talkTimeDist.map((item, index) => ({
     name: item.speaker || `Speaker ${index + 1}`,
     value: Math.round((item.durationSec / totalDuration) * 100),
     color: TALK_TIME_COLORS[index % TALK_TIME_COLORS.length],
@@ -77,6 +89,7 @@ export default function TalkTimeDistribution({
                 />
               ))}
             </Pie>
+
             <Tooltip
               contentStyle={{
                 backgroundColor: "hsl(var(--card))",
@@ -87,6 +100,7 @@ export default function TalkTimeDistribution({
           </PieChart>
         </ResponsiveContainer>
 
+        {/* Legend */}
         <div className="space-y-2 w-full mt-4">
           {talkTimeData.map((item, index) => (
             <div

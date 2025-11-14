@@ -19,7 +19,7 @@ import {
 import { MessageSquare } from "lucide-react";
 
 interface TranscriptSectionProps {
-  fileId: string; 
+  fileId: string;
 }
 
 export default function TranscriptSection({ fileId }: TranscriptSectionProps) {
@@ -38,11 +38,8 @@ export default function TranscriptSection({ fileId }: TranscriptSectionProps) {
         setTranscriptText(
           res.data.transcript || res.data || "No transcript available."
         );
-      } catch (error: any) {
-        console.error(
-          "Failed to fetch transcript:",
-          error.response || error.message
-        );
+      } catch (error) {
+        console.error("Failed to fetch transcript:", error);
         setTranscriptText("Error loading transcript.");
       } finally {
         setLoading(false);
