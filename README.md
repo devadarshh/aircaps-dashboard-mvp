@@ -2,16 +2,16 @@
 
 AirCaps Dashboard MVP is a minimal viable product for managing, uploading, and analyzing live caption sessions captured via AirCaps Smart Glasses. The dashboard enables real-time transcription, analytics, and actionable insights for conversations.
 
-**🌐 Live Demo:** [Access Aircaps Dashboard]()  
+**🌐 Live Demo:** [Access Aircaps Dashboard](https://aircaps-dashboard.vercel.app/)  
 **🎬 Project Walkthrough:** [Watch on Loom]()
 
 ## ✅ Core Features
 
 - 📤 **Upload & Process Captions** – Upload .txt caption files and process them asynchronously.
-- 🧠 **Conversation Analysis** – Generate insights, extract action items, and identify talk/listen ratios.
-- 📊 **Key Metrics Dashboard** – Track total words, conversation duration, and activity trends.
+- 🧠 **🧠 AI-Powered Conversation Analysis** – Generate insights, extract action items, and identify talk/listen ratios.
+- 📊 **Real-Time Speaking Metrics Dashboard** – Track total words, conversation duration, and activity trends.
 - 🗂️ **Recent Conversations Table** – See your latest sessions with tone, status, and analysis results.
-- 📊 **Quick Guide** – Step-by-step instructions for using the dashboard efficiently.
+- 📈 **Sentiment Timeline Visualization** – Step-by-step instructions for using the dashboard efficiently.
 
 ## 🛠 Tech Stack
 
@@ -19,7 +19,7 @@ AirCaps Dashboard MVP is a minimal viable product for managing, uploading, and a
 
 - ⚛️ **Next.js** – React-based framework for server-side rendering and dynamic client-side interactivity
 - 🎨 **TailwindCSS, Lucide Icons, Shadcn UI, Animate.css**
-- 📝 **React Hook Form & Yup** – Form handling and validation
+- 📊 **Recharts – Analytics + visualisation components**
 - 🌐 **Axios** – API requests and data fetching
 - 🔒 **NextAuth** – Authentication and user management
 
@@ -27,46 +27,38 @@ AirCaps Dashboard MVP is a minimal viable product for managing, uploading, and a
 
 - ⚡ **Next.js** – Lightweight and flexible backend framework
 - 🗄 **PostgreSQL + Prisma ORM** – Relational database with schema management
+- 🔍 **Qdrant (Vector DB)** – Semantic search + embeddings
+- 🧠 **LangChain + HuggingFace Inference** – LLM pipelines, text chunking
+- 🧵 **BullMQ (Redis)** – Job queues for background processing
 - 🛡 **Zod** – Request validation
 - 🌱 **Dotenv** – Environment variable management
 
 ## 📸 Screenshots
 
-![Backend Architecture](apps/web/assets/screenshots/landing_page.png)
+### Backend Architecture
 
-### Landing Page
+![Backend Architecture](assets/archi.png)
 
-![Landing Page](apps/web/assets/screenshots/landing_page.png)
-a
-### Sign In Page
+### Auth Page
 
-![Sign In Page](apps/web/assets/screenshots/sign_in_page.png)
+![Auth Page](assets/auth.png)
 
-### Organization Page
+### Analytics Page
 
-![Organization Page](apps/web/assets/screenshots/organizaions_page.png)
+![Analytics Page](assets/analytics.png)
 
-### Board Page
+### Upload Page
 
-![Board Page](apps/web/assets/screenshots/board_page.png)
+![Upload Page](assets/upload.png)
 
-### Card Page
+### Conversation Page
 
-![Card Page](apps/web/assets/screenshots/card_modal.png)
+![Conversation Page](assets/conversation1.png)
 
-### Settings Page
+### Conversation Page II
 
-![Settings Page](apps/web/assets/screenshots/settings_page.png)
+![Conversation Page II ](assets/conversation2.png)
 
-### Billing Page
+### Conversation Page III
 
-![Billing Page](apps/web/assets/screenshots/pro_modal.png)
-
-### Activity Page
-
-![Activity Page](apps/web/assets/screenshots/activity_page.png)
-
-## 📄 License
-
-This project is licensed under a **Custom Personal Use License** — you may view and learn from the code, but **commercial use, redistribution, or claiming authorship is strictly prohibited**.  
-See the full [LICENSE](./LICENSE) for details.
+![Conversation Page III ](assets/conversation3.png)
