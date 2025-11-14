@@ -75,7 +75,6 @@ export default function ConversationDetailPage() {
     fetchAnalysis();
   }, [id]);
 
-  // --- Skeleton placeholders while loading ---
   if (loading) {
     return (
       <DashboardLayout>
@@ -96,24 +95,18 @@ export default function ConversationDetailPage() {
               </div>
             </div>
 
-            {/* Bento Grid Skeleton */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* TalkTimeDistribution Skeleton */}
               <Skeleton className="lg:col-span-4 h-64 rounded-xl" />
 
-              {/* SpeakingMetrics Skeleton */}
               <Skeleton className="lg:col-span-8 h-64 rounded-xl" />
 
-              {/* AISummary Skeleton */}
               <Skeleton className="lg:col-span-7 h-48 rounded-xl" />
 
-              {/* ActionItems Skeleton */}
               <Skeleton className="lg:col-span-5 h-48 rounded-xl" />
 
-              {/* SentimentOverTime Skeleton */}
               <Skeleton className="lg:col-span-12 h-48 rounded-xl" />
 
-              {/* TranscriptSection Skeleton */}
               <Skeleton className="lg:col-span-12 h-40 rounded-xl" />
             </div>
           </div>

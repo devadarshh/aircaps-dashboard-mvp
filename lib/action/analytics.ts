@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-// import { auth } from "@/auth"; // Uncomment if auth is set up
 
 export async function getTotalTimeLast7Days() {
   try {

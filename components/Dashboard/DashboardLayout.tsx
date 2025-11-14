@@ -29,7 +29,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Mobile Top Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-sidebar border-b border-sidebar-border p-4 md:hidden">
         <div className="flex items-center gap-2">
           <Button
@@ -117,7 +116,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 md:hidden"
@@ -125,7 +123,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         />
       )}
 
-      {/* Main content */}
       <main className="flex-1 overflow-auto pt-16 md:pt-0">{children}</main>
     </div>
   );

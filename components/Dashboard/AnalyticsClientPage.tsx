@@ -27,7 +27,7 @@ interface ActionItem {
 }
 
 interface AnalyticsClientPageProps {
-  totalTimeLast7Days: string;
+  totalTimeLast7Days?: string;
 }
 
 const AnalyticsClientPage = ({
@@ -36,15 +36,19 @@ const AnalyticsClientPage = ({
   const router = useRouter();
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [talkListenRatio, setTalkListenRatio] = useState<string | null>(null);
+  const [totalWords, setTotalWords] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [actionRes, convRes] = await Promise.all([
+        const [actionRes, convRes, talkListenRes,totalWordsRes] = await Promise.all([
           axios.get("/api/analysis/actionItems"),
           axios.get("/api/analysis/recent"),
+          axios.get("/api/analysis/talkListenRatio"),
+          axios.get("/api/analysis/totalWords"),
         ]);
 
         const formattedActionItems = (
@@ -61,6 +65,15 @@ const AnalyticsClientPage = ({
 
         setActionItems(formattedActionItems);
         setConversations(convRes.data.conversations || []);
+
+        if (talkListenRes.data) {
+          setTalkListenRatio(
+            `${talkListenRes.data.avgTalk} / ${talkListenRes.data.avgListen}`
+          );
+        }
+        if (totalWordsRes.data) {
+          setTotalWords(totalWordsRes.data.totalWords || 0);
+        }
       } catch (err) {
         console.error("Failed to fetch analytics data:", err);
       } finally {
@@ -83,25 +96,21 @@ const AnalyticsClientPage = ({
     return (
       <DashboardLayout>
         <div className="p-6 lg:p-8 space-y-8">
-          {/* Page title skeleton */}
           <Skeleton className="h-8 w-1/3" />
           <Skeleton className="h-4 w-1/2" />
 
-          {/* Action Items skeleton */}
           <div className="space-y-3 max-h-[300px] overflow-y-auto">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-12 rounded-lg" />
             ))}
           </div>
 
-          {/* Insights skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-24 rounded-lg" />
             ))}
           </div>
 
-          {/* Recent Conversations Table skeleton */}
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
               <tbody>
@@ -154,26 +163,30 @@ const AnalyticsClientPage = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <InsightCard
               title="Total Time (Last 7 Days)"
-              value={totalTimeLast7Days}
-              subText="+15% from last week"
+              value={totalTimeLast7Days || "0"}
+              subText={totalTimeLast7Days ? "+15% from last week" : ""}
               loading={false}
             />
             <InsightCard
               title="Avg. Talk/Listen Ratio"
-              value="40 / 60"
-              subText="Talk more than last week"
+              value={talkListenRatio || "0 / 0"}
+              subText={talkListenRatio ? "Talk more than last week" : ""}
               loading={false}
             />
             <InsightCard
               title="Total Conversations (Last 7 Days)"
-              value={conversations.length}
-              subText="vs. 19 last week"
+              value={conversations.length > 0 ? conversations.length : 0}
+              subText={
+                conversations.length > 0
+                  ? `vs. ${Math.max(conversations.length - 1, 0)} last week`
+                  : ""
+              }
               loading={false}
             />
             <InsightCard
               title="Total Words (Last 7 Days)"
-              value={12345}
-              subText="+20% from last week"
+              value={totalWords ?? 0}
+              subText={totalWords > 0 ? "+20% from last week" : ""}
               loading={false}
             />
           </div>

@@ -40,7 +40,6 @@ export default function TalkTimeDistribution({
     );
   }
 
-  // Compute total and percentage
   const totalDuration =
     talkTimeDist.reduce((sum, item) => sum + item.durationSec, 0) || 1;
 
@@ -88,7 +87,6 @@ export default function TalkTimeDistribution({
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Legend */}
         <div className="space-y-2 w-full mt-4">
           {talkTimeData.map((item, index) => (
             <div

@@ -19,7 +19,7 @@ import {
 import { MessageSquare } from "lucide-react";
 
 interface TranscriptSectionProps {
-  fileId: string; // pass fileId when rendering component
+  fileId: string; 
 }
 
 export default function TranscriptSection({ fileId }: TranscriptSectionProps) {
@@ -35,7 +35,6 @@ export default function TranscriptSection({ fileId }: TranscriptSectionProps) {
         const res = await axios.get(`/api/files/${fileId}/transcript`);
         console.log("Transcript API response:", res);
 
-        // Depending on your API response structure, fix this line:
         setTranscriptText(
           res.data.transcript || res.data || "No transcript available."
         );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import {
@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   FileText,
@@ -19,17 +18,16 @@ import {
   Upload as UploadIcon,
   X,
   Brain,
-  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisDone, setAnalysisDone] = useState(false);
+  const [isWorkerDone, setIsWorkerDone] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [fileId, setFileId] = useState<string>("");
   const [conversationText, setConversationText] = useState<string>("");
@@ -43,6 +41,7 @@ const Upload = () => {
     setFile(selectedFile);
     setUploadSuccess(false);
     setAnalysisDone(false);
+    setIsWorkerDone(false);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -65,16 +64,16 @@ const Upload = () => {
       const text = await file.text();
       setConversationText(text);
       setFileId(res.data.file.id);
-
       setUploadSuccess(true);
+
       toast({
-        title: "✅ Upload Successful",
+        title: "Upload Successful",
         description: `${file.name} uploaded successfully.`,
       });
     } catch (err) {
       console.error(err);
       toast({
-        title: "❌ Upload Failed",
+        title: "Upload Failed",
         description: "Something went wrong while uploading.",
         variant: "destructive",
       });
@@ -82,11 +81,40 @@ const Upload = () => {
       setIsUploading(false);
     }
   };
+  const checkFileStatus = async () => {
+    if (!fileId) return null;
+
+    try {
+      const res = await axios.get(`/api/fileStatus?fileId=${fileId}`);
+      return res.data.status;
+    } catch (err) {
+      console.error("Failed to check file status:", err);
+      return null;
+    }
+  };
+  useEffect(() => {
+    if (!uploadSuccess) return;
+
+    const interval = setInterval(async () => {
+      const status = await checkFileStatus();
+      console.log(status);
+      if (status === "READY") {
+        setIsWorkerDone(true);
+        clearInterval(interval);
+        toast({
+          title: " File processed",
+          description: "You can now analyze it.",
+        });
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [uploadSuccess, fileId, toast]);
 
   const handleAnalyze = async () => {
     if (!conversationText || !fileId) {
       toast({
-        title: "⚠️ Missing file",
+        title: "Missing file",
         description: "Please upload a file first.",
       });
       return;
@@ -94,7 +122,7 @@ const Upload = () => {
 
     try {
       setIsAnalyzing(true);
-      toast({ title: "🧠 Analyzing...", description: "Processing your file." });
+      toast({ title: " Analyzing...", description: "Processing your file." });
 
       const res = await axios.post("/api/analyze", {
         fileId,
@@ -107,7 +135,7 @@ const Upload = () => {
       const analysisId = res.data.analysis.id;
 
       toast({
-        title: "✅ Analysis Complete",
+        title: " Analysis Complete",
         description: "Your session has been analyzed successfully.",
       });
 
@@ -119,7 +147,7 @@ const Upload = () => {
     } catch (err) {
       console.error(err);
       toast({
-        title: "❌ Analysis Failed",
+        title: " Analysis Failed",
         description: "Something went wrong while analyzing the file.",
         variant: "destructive",
       });
@@ -131,7 +159,6 @@ const Upload = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-[#e9e6e2] p-4 sm:p-6 lg:p-8 space-y-6 transition-all">
-        {/* Header */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-gray-900">
             Upload Captions
@@ -142,7 +169,6 @@ const Upload = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Upload Section */}
           <Card className="lg:col-span-2 shadow-md rounded-2xl">
             <CardHeader>
               <CardTitle className="text-xl">Upload Session Data</CardTitle>
@@ -153,29 +179,31 @@ const Upload = () => {
 
             <CardContent>
               <form onSubmit={handleUpload} className="space-y-6">
-                {/* File Upload */}
                 <div className="space-y-2">
                   <Label htmlFor="file" className="text-base font-medium">
                     Caption File
                   </Label>
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/60 transition-colors relative">
                     {!file ? (
-                      isUploading ? (
-                        <Skeleton className="h-32 w-full rounded-lg" />
-                      ) : (
-                        <label
-                          htmlFor="file"
-                          className="cursor-pointer flex flex-col items-center"
-                        >
-                          <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                          <p className="font-medium mb-1 text-gray-700">
-                            Drop your file or click to browse
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Supports .txt file
-                          </p>
-                        </label>
-                      )
+                      <label
+                        htmlFor="file"
+                        className="cursor-pointer flex flex-col items-center"
+                      >
+                        <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                        <p className="font-medium mb-1 text-gray-700">
+                          Drop your file or click to browse
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Supports .txt file
+                        </p>
+                        <input
+                          id="file"
+                          type="file"
+                          accept=".txt"
+                          className="hidden"
+                          onChange={handleFileChange}
+                        />
+                      </label>
                     ) : (
                       <div className="flex items-center justify-between p-4 bg-muted rounded-md cursor-pointer">
                         <div className="flex items-center gap-3 text-left">
@@ -199,55 +227,36 @@ const Upload = () => {
                   </div>
                 </div>
 
-                {/* Upload Button */}
                 <Button
                   type="submit"
-                  className="w-full cursor-pointer transition-all hover:scale-[1.02]"
+                  className="w-full transition-all hover:scale-[1.02]"
                   disabled={isUploading || uploadSuccess || !file}
                 >
-                  {isUploading ? (
-                    <Skeleton className="h-6 w-full rounded-md" />
-                  ) : uploadSuccess ? (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Uploaded
-                    </>
-                  ) : (
-                    <>
-                      <UploadIcon className="mr-2 h-4 w-4" />
-                      Upload Session
-                    </>
-                  )}
+                  {isUploading
+                    ? "Uploading..."
+                    : uploadSuccess
+                    ? "Uploaded"
+                    : "Upload Session"}
                 </Button>
 
-                {/* Analyze Button */}
                 {uploadSuccess && (
                   <Button
                     type="button"
                     onClick={handleAnalyze}
-                    className="w-full cursor-pointer transition-all hover:scale-[1.02]"
-                    disabled={isAnalyzing || analysisDone}
+                    className="w-full transition-all hover:scale-[1.02]"
+                    disabled={isAnalyzing || analysisDone || !isWorkerDone}
                   >
-                    {isAnalyzing ? (
-                      <Skeleton className="h-6 w-full rounded-md" />
-                    ) : analysisDone ? (
-                      <>
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Done
-                      </>
-                    ) : (
-                      <>
-                        <Brain className="mr-2 h-4 w-4" />
-                        Analyze Session
-                      </>
-                    )}
+                    {isAnalyzing
+                      ? "Analyzing..."
+                      : analysisDone
+                      ? "Done "
+                      : "Analyze Session"}
                   </Button>
                 )}
               </form>
             </CardContent>
           </Card>
 
-          {/* Quick Guide */}
           <Card className="shadow-md rounded-2xl">
             <CardHeader>
               <CardTitle className="text-xl">Quick Guide</CardTitle>

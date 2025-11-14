@@ -7,16 +7,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react"; // Changed icon to a checkmark for action items
+import { CheckCircle2 } from "lucide-react"; 
 
 interface ActionItemsProps {
   todos: any[];
-  className?: string; // Added className prop for layout flexibility
+  className?: string; 
 }
 
 export default function ActionItems({ todos, className }: ActionItemsProps) {
   return (
-    // 1. Accept className to allow the parent to control height (flex-grow)
     <Card
       className={`shadow-sm border border-border/50 bg-[#fefdfc] flex flex-col ${className}`}
     >
@@ -30,19 +29,15 @@ export default function ActionItems({ todos, className }: ActionItemsProps) {
         </CardDescription>
       </CardHeader>
 
-      {/* 2. Added flex-grow so content pushes down if needed */}
-      <CardContent className="flex-grow">
+      <CardContent className="grow">
         {todos && todos.length > 0 ? (
-          // 3. Changed from grid to flex-col for vertical stacking
           <div className="flex flex-col gap-3 h-full">
             {todos.map((item, index) => (
               <div
                 key={index}
-                // 4. Full width row styling with better padding
                 className="flex items-start gap-3 p-4 rounded-xl border border-border/60 bg-white hover:bg-gray-50 transition-colors shadow-sm"
               >
-                {/* Small visual bullet point */}
-                <div className="mt-1.5 h-2 w-2 rounded-full bg-primary/60 flex-shrink-0" />
+                <div className="mt-1.5 h-2 w-2 rounded-full bg-primary/60 shrink-0" />
 
                 <p className="text-sm text-foreground font-medium leading-relaxed">
                   {typeof item === "object" ? JSON.stringify(item) : item}

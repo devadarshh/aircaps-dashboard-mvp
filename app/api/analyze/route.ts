@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
 
-    // ✅ Step 1: Generate embeddings
     const hfResponse = await hf.featureExtraction({
       model: "sentence-transformers/all-MiniLM-L6-v2",
       inputs: conversationText,
@@ -51,7 +50,6 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(queryEmbedding) || queryEmbedding.length !== 384)
       throw new Error("Invalid embedding format");
 
-    // ✅ Step 2: Search context from Qdrant
     const searchResult = await qdrantClient.search(COLLECTION_NAME, {
       vector: queryEmbedding as number[],
       limit: 5,
@@ -75,12 +73,12 @@ export async function POST(req: NextRequest) {
       .join("\n\n")
       .slice(0, 3000);
 
-    // ✅ Step 3: Prompt LLM to return JSON strictly
     const parser = new JsonOutputParser();
     const formatInstructions = parser.getFormatInstructions();
+    const userName = session.user.name || "User";
 
     const PROMPT = `
-You are an expert conversation coach with 50+ years of experience. My name is Adarsh. 
+You are an expert conversation coach with 50+ years of experience. My name is ${userName}. 
 Analyze the following conversation chunks and return a JSON object **strictly in the format below**:
 
 **Task 1: Categorize the Tone**
@@ -143,14 +141,13 @@ ${conversationText}
     try {
       parsedData = await parser.parse(llmOutput);
     } catch (err) {
-      console.warn("⚠️ Failed to parse LLM output as JSON", err);
+      console.warn(" Failed to parse LLM output as JSON", err);
       parsedData = { raw: llmOutput };
     }
 
     const finalTitle =
       userProvidedTitle?.trim() || parsedData.title || "Untitled Conversation";
 
-    // ✅ Step 5: Save analysis
     const savedAnalysis = await prisma.analysis.create({
       data: {
         fileId,
@@ -173,7 +170,7 @@ ${conversationText}
       analysis: { id: savedAnalysis.id },
     });
   } catch (err: any) {
-    console.error("❌ RAG Analysis Error:", err);
+    console.error("RAG Analysis Error:", err);
     return NextResponse.json(
       { error: err.message || "Internal Server Error" },
       { status: 500 }

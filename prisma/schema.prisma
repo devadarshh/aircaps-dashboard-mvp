@@ -68,7 +68,7 @@ model File {
   supabasePath   String
   metadata       Json?
   analysis       Json? 
-  status          String   @default("PENDING") 
+    status         String   @default("UPLOADED")
   durationMinutes Float?    
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

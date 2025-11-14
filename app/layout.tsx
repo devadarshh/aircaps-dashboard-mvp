@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "AirCaps-Dashboard",
   description: "Instant Subtitles on Smart Glasses",
   icons: {
-    icon: "/favicon.ico", // main favicon
-    apple: "/favicon.ico", // optional for iOS devices
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 

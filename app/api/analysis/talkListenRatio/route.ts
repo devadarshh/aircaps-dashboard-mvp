@@ -1,4 +1,4 @@
-// app/api/analytics/talkListenRatio/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -14,7 +14,6 @@ export async function GET() {
 
     const userEmail = session.user.email;
 
-    // Fetch user
     const user = await prisma.user.findUnique({
       where: { email: userEmail },
       select: { id: true },
@@ -24,7 +23,6 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Fetch all analyses for the user with talkListenRatio defined
     const analyses = await prisma.analysis.findMany({
       where: {
         userId: user.id,
@@ -39,12 +37,10 @@ export async function GET() {
       return NextResponse.json({ message: "No data found" });
     }
 
-    // Calculate average talk/listen ratio
     let totalTalk = 0;
     let totalListen = 0;
 
     analyses.forEach((a) => {
-      // Assuming talkListenRatio is stored as a decimal: 0.45 for 45%
       totalTalk += a.talkListenRatio || 0;
       totalListen += 1 - (a.talkListenRatio || 0);
     });
@@ -52,7 +48,6 @@ export async function GET() {
     const avgTalk = totalTalk / analyses.length;
     const avgListen = totalListen / analyses.length;
 
-    // Calculate the difference
     const diff = avgListen - avgTalk;
     const message =
       diff > 0

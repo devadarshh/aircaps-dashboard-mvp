@@ -19,15 +19,13 @@ import {
   Rectangle,
 } from "recharts";
 
-// --- Theme Colors ---
-const PRIMARY_COLOR = "#4F46E5"; // Indigo 600 (Matches your TalkTime dark blue)
-const IDEAL_COLOR = "#C4B5FD"; // Violet 300 (Matches your TalkTime light purple)
-const HOVER_BG_COLOR = "#E0E7FF"; // Indigo 100 (Subtle background hover)
+const PRIMARY_COLOR = "#4F46E5";
+const IDEAL_COLOR = "#C4B5FD";
+const HOVER_BG_COLOR = "#E0E7FF";
 
-// Custom Tooltip to show REAL values
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload; // Access the original data object
+    const data = payload[0].payload;
     return (
       <div className="bg-white p-3 border border-indigo-100 shadow-xl rounded-lg text-xs">
         <p className="font-bold mb-2 text-gray-900">{data.metric}</p>
@@ -64,7 +62,6 @@ export default function SpeakingMetrics({
     fullMark: number;
   }[];
 }) {
-  // Normalize data to percentages (0-100)
   const normalizedData = keyMetricsData.map((item) => ({
     ...item,
     originalValue: item.value,
@@ -84,17 +81,17 @@ export default function SpeakingMetrics({
           <BarChart
             data={normalizedData}
             margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-            barGap={4} // Increased gap slightly for cleaner look
+            barGap={4}
           >
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="#E0E7FF" // Lighter grid to match theme
+              stroke="#E0E7FF"
             />
 
             <XAxis
               dataKey="metric"
-              tick={{ fill: "#6B7280", fontSize: 12 }} // Gray-500
+              tick={{ fill: "#6B7280", fontSize: 12 }}
               tickLine={false}
               axisLine={false}
             />
@@ -103,7 +100,7 @@ export default function SpeakingMetrics({
 
             <Tooltip
               content={<CustomTooltip />}
-              cursor={{ fill: HOVER_BG_COLOR, opacity: 0.4 }} // Subtle indigo highlight on column hover
+              cursor={{ fill: HOVER_BG_COLOR, opacity: 0.4 }}
             />
 
             <Legend
@@ -111,13 +108,11 @@ export default function SpeakingMetrics({
               wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
             />
 
-            {/* Bar 1: Your Score */}
             <Bar
               dataKey="valuePercent"
               name="Your Score"
               radius={[4, 4, 0, 0]}
               fill={PRIMARY_COLOR}
-              // Active Bar adds a stroke to make it look "increased" or focused
               activeBar={
                 <Rectangle
                   fill={PRIMARY_COLOR}
@@ -127,7 +122,6 @@ export default function SpeakingMetrics({
               }
             />
 
-            {/* Bar 2: Ideal Score */}
             <Bar
               dataKey="idealPercent"
               name="Ideal Target"

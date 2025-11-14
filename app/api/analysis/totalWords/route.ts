@@ -19,11 +19,10 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Sum total words
     let totalWords = 0;
     user.analyses.forEach((analysis) => {
       const text = analysis.summary || "";
-      totalWords += text.split(/\s+/).length; // simple word count
+      totalWords += text.split(/\s+/).length;
     });
 
     return NextResponse.json({ totalWords });

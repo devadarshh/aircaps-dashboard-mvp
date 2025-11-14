@@ -27,11 +27,9 @@ const ActionItemsCard = ({ actionItems, loading, toggleActionItem }: Props) => {
     <Card className="border-primary/20 hover:shadow-md hover:scale-[1.01] transition-all duration-200 ease-in-out cursor-pointer">
       {loading ? (
         <div className="p-4 space-y-3">
-          {/* Skeleton Header */}
           <div className="h-6 w-1/2 bg-gray-300 rounded animate-pulse"></div>
           <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse"></div>
 
-          {/* Skeleton Action Items */}
           <div className="space-y-3 max-h-[300px] overflow-y-auto">
             {[...Array(3)].map((_, index) => (
               <div

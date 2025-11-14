@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // params is a Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const resolvedParams = await params; // unwrap the Promise
+  const resolvedParams = await params;
   const id = resolvedParams.id;
 
   if (!id) {

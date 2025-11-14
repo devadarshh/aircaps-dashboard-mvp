@@ -1,14 +1,12 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, signIn } from "next-auth/react";
-
-const Loader = () => (
-  <div className="w-12 h-12 border-4 border-[#e9e6e2] border-t-[#cfcac1] rounded-full animate-spin"></div>
-);
 
 const AuthPage = () => {
   const { status } = useSession();
@@ -23,8 +21,10 @@ const AuthPage = () => {
 
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#e9e6e2]">
-        <Loader />
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#e9e6e2] space-y-4">
+        <Skeleton className="w-24 h-24 rounded-full" />
+        <Skeleton className="w-48 h-8 rounded-md" />
+        <Skeleton className="w-64 h-12 rounded-lg" />
       </div>
     );
   }
@@ -69,9 +69,8 @@ const AuthPage = () => {
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-[#dcd8d2] border-t-[#cfcac1] rounded-full animate-spin"></div>
-                  Signing in...
+                <div className="w-full flex items-center justify-center gap-2">
+                  <Skeleton className="w-20 h-5 rounded-md" />
                 </div>
               ) : (
                 <>

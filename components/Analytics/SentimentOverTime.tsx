@@ -19,12 +19,10 @@ import {
   TooltipProps,
 } from "recharts";
 
-// --- Theme Colors ---
-const CHART_COLOR = "#4F46E5"; // Indigo 600 (Primary Brand Color)
-const GRID_COLOR = "#E0E7FF"; // Indigo 100 (Subtle Grid)
-const TEXT_COLOR = "#6B7280"; // Gray 500 (Text)
+const CHART_COLOR = "#4F46E5"; 
+const GRID_COLOR = "#E0E7FF"; 
+const TEXT_COLOR = "#6B7280"; 
 
-// Custom Tooltip
 const CustomSentimentTooltip = ({
   active,
   payload,
@@ -47,7 +45,6 @@ const CustomSentimentTooltip = ({
   return null;
 };
 
-// Main Component
 export default function SentimentOverTime({
   sentimentOverTime,
 }: {
