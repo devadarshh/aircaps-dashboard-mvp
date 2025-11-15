@@ -1,5 +1,4 @@
 # Dockerfile for the worker-only service (Render)
-# Simplified: installs all deps, builds worker, then keeps only prod deps
 FROM node:20-slim
 WORKDIR /app
 ENV NODE_ENV=production
@@ -7,14 +6,14 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package*.json tsconfig.worker.json ./
 
-# Install ALL dependencies (including dev, needed for TypeScript build)
-RUN npm ci --prefer-offline --no-audit
+# Install ALL dependencies (with explicit flag to include dev)
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
-# Build the worker TypeScript
-RUN npm run build:worker
+# Build the worker TypeScript directly with tsc
+RUN npx tsc -p tsconfig.worker.json
 
 # Now remove dev dependencies to reduce final image size
 RUN npm prune --omit=dev --prefer-offline --no-audit
