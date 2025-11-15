@@ -2,7 +2,7 @@
 {
   "extends": "./tsconfig.json", // Inherits paths like @/lib/*
   "compilerOptions": {
-    "module": "commonjs", // Workers are simpler with CommonJS
+    "module": "nodenext", // Match base tsconfig moduleResolution
     "outDir": "dist-worker", // Output to a separate folder
     "noEmit": false // This is key: we *want* to emit JS files
   },
