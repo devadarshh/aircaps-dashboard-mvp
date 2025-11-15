@@ -11,11 +11,20 @@ const qdrant_1 = require("@/lib/qdrant");
 const splitter_1 = require("@/lib/splitter");
 const redis_1 = require("@/lib/redis");
 const ensureCollection_1 = require("@/utils/ensureCollection");
-const workerOptions = {
+// `redis` may be a NoopRedis fallback when UPSTASH_REDIS_URL is missing. To
+// satisfy BullMQ's types for `WorkerOptions.connection` we check for the noop
+// marker and only pass a real redis instance when available.
+const _redisMarker = redis_1.redis;
+const bullConnection = _redisMarker.__isNoop
+    ? undefined
+    : redis_1.redis;
+const baseWorkerOptions = {
     concurrency: 10,
-    connection: redis_1.redis,
     skipVersionCheck: true,
 };
+const workerOptions = bullConnection
+    ? Object.assign(Object.assign({}, baseWorkerOptions), { connection: bullConnection })
+    : baseWorkerOptions;
 function calculateDurationFormText(transcript) {
     if (!transcript || transcript.length === 0) {
         return 0;

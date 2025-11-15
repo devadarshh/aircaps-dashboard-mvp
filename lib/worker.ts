@@ -9,11 +9,23 @@ import { splitter } from "@/lib/splitter";
 import { redis } from "@/lib/redis";
 import { ensureCollectionExists } from "@/utils/ensureCollection";
 
-const workerOptions: WorkerOptions = {
+// `redis` may be a NoopRedis fallback when UPSTASH_REDIS_URL is missing. To
+// satisfy BullMQ's types for `WorkerOptions.connection` we check for the noop
+// marker and only pass a real redis instance when available.
+const _redisMarker = redis as unknown as { __isNoop?: true };
+const bullConnection: WorkerOptions["connection"] | undefined =
+  _redisMarker.__isNoop
+    ? undefined
+    : (redis as unknown as WorkerOptions["connection"]);
+
+const baseWorkerOptions = {
   concurrency: 10,
-  connection: redis,
   skipVersionCheck: true,
-};
+} as const;
+
+const workerOptions: WorkerOptions = bullConnection
+  ? ({ ...baseWorkerOptions, connection: bullConnection } as WorkerOptions)
+  : (baseWorkerOptions as unknown as WorkerOptions);
 interface FileJobData {
   fileId: string;
 }
