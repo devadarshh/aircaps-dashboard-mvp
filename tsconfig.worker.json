@@ -1,0 +1,20 @@
+// tsconfig.worker.json
+{
+  "extends": "./tsconfig.json", // Inherits paths like @/lib/*
+  "compilerOptions": {
+    "module": "commonjs", // Workers are simpler with CommonJS
+    "outDir": "dist-worker", // Output to a separate folder
+    "noEmit": false // This is key: we *want* to emit JS files
+  },
+  "include": [
+    "lib/worker.ts",
+    "lib/worker-server.ts",
+    "lib/redis.ts",
+    "lib/prisma.ts",
+    "lib/supabase.ts",
+    "lib/hfClient.ts",
+    "lib/qdrant.ts",
+    "lib/splitter.ts",
+    "utils/ensureCollection.ts"
+  ]
+}

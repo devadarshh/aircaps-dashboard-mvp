@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: aircaps-worker
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: UPSTASH_REDIS_URL
+        scope: run
+      - key: SUPABASE_URL
+        scope: run
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        scope: run
+      - key: SUPABASE_BUCKET_NAME
+        scope: run
+      - key: DATABASE_URL
+        scope: run
+      - key: HUGGINGFACE_API_KEY
+        scope: run
+      - key: QDRANT_URL
+        scope: run
+      - key: QDRANT_API_KEY
+        scope: run
