@@ -3,14 +3,14 @@ FROM node:20-slim
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy ALL source files
+# Copy package files first
+COPY package.json package-lock.json tsconfig.worker.json ./
+
+# Install all dependencies from package.json (fresh, no cached lock)
+RUN npm install --no-package-lock
+
+# Copy ALL source files after deps are installed
 COPY . .
-
-# Remove lock files to force fresh install with all deps from package.json
-RUN rm -f package-lock.json npm-shrinkwrap.json
-
-# Install all dependencies (both prod and dev)
-RUN npm install
 
 # Build the worker TypeScript
 RUN npm run build:worker
