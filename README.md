@@ -8,7 +8,7 @@ AirCaps Dashboard MVP is a minimal viable product for managing, uploading, and a
 ## ✅ Core Features
 
 - 📤 **Upload & Process Captions** – Upload .txt caption files and process them asynchronously.
-- 🧠 **🧠 AI-Powered Conversation Analysis** – Generate insights, extract action items, and identify talk/listen ratios.
+- 🧠 **AI-Powered Conversation Analysis** – Generate insights, extract action items, and identify talk/listen ratios.
 - 📊 **Real-Time Speaking Metrics Dashboard** – Track total words, conversation duration, and activity trends.
 - 🗂️ **Recent Conversations Table** – See your latest sessions with tone, status, and analysis results.
 - 📈 **Sentiment Timeline Visualization** – Step-by-step instructions for using the dashboard efficiently.

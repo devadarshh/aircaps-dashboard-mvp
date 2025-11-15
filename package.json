@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "concurrently \"npm run worker\" \"next dev\" --names \"worker,next\" --prefix-colors \"blue,green\"",
     "worker": "tsx watch --env-file .env lib/worker.ts",
-    "build": "next build",
+    "build:web": "next build",
+    "build:worker": "tsc -p tsconfig.worker.json",
+    "build": "npm run build:web && npm run build:worker",
     "start": "next start",
+    "start:worker": "node dist-worker/lib/worker.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -30,6 +33,7 @@
     "bullmq": "^5.63.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "fly": "^4.6.16",
     "langchain": "^1.0.4",
     "lucide-react": "^0.553.0",
     "next": "16.0.1",

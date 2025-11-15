@@ -1,6 +1,5 @@
 import { worker } from "@/lib/worker";
 
-// Initialize the worker and keep it running in the background
 worker.on("completed", (job) => {
   console.log(`Job ${job.id} completed`);
 });
