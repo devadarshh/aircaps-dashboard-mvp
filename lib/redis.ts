@@ -1,6 +1,6 @@
 import IORedis from "ioredis";
 
-export const redis = new IORedis(process.env.UPSTASH_REDIS_REST_URL!, {
+export const redis = new IORedis(process.env.UPSTASH_REDIS_URL!, {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
   lazyConnect: true,
