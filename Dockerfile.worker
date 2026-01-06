@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files first
 COPY package.json package-lock.json tsconfig.json tsconfig.worker.json ./
 
-# Install dependencies (using npm install to auto-fix lockfile discrepancies)
-RUN npm install
+# Install dependencies (using legacy-peer-deps to bypass next-auth conflict)
+RUN npm install --legacy-peer-deps
 
 # Copy ALL source files after deps are installed
 COPY . .
@@ -19,7 +19,7 @@ RUN npx prisma generate
 RUN npm run build:worker
 
 # Now remove dev dependencies to reduce final image size
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev --legacy-peer-deps
 
 # Set production environment for runtime
 ENV NODE_ENV=production
