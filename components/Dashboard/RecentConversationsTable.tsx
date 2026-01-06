@@ -163,8 +163,8 @@ const RecentConversationsTable = ({
               <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
             <div className="space-y-2">
-              <DialogTitle className="text-xl">Delete Conversation</DialogTitle>
-              <DialogDescription className="text-base leading-relaxed">
+              <DialogTitle className="text-xl font-bold">Delete Conversation</DialogTitle>
+              <DialogDescription className="text-base leading-relaxed text-foreground/80">
                 Are you sure you want to delete this conversation? This action
                 cannot be undone and all analysis data will be permanently
                 removed.

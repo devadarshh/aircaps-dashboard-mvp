@@ -248,10 +248,8 @@ const Upload = () => {
                       </>
                     ) : analysisDone ? (
                       "Done"
-                    ) : isWorkerDone ? (
-                      "Analyze Session"
                     ) : (
-                      "Waiting for Worker..."
+                      "Analyze Session"
                     )}
                   </Button>
                 )}

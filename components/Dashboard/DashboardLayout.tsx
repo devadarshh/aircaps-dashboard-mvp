@@ -3,7 +3,16 @@
 import { ReactNode, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Upload, Settings, LogOut, Menu } from "lucide-react";
+import {
+  BarChart3,
+  Upload,
+  Settings,
+  LogOut,
+  Menu,
+  Battery,
+  Zap,
+  HardDrive,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
@@ -77,6 +86,46 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
 
         <nav className="flex-1 p-4 space-y-2 mt-12 md:mt-0">
+          {/* Device Status Section */}
+          <div className="px-2 mb-6 space-y-3">
+            <div className="flex items-center justify-between px-3 py-2 bg-white/5 rounded-lg border border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-xs font-medium text-sidebar-foreground/90">
+                  AirCaps Pro
+                </span>
+              </div>
+              <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full font-bold tracking-wider">
+                SYNCED
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1 p-2 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-1.5 text-sidebar-foreground/60">
+                  <Battery className="h-3 w-3" />
+                  <span className="text-[10px] font-bold uppercase tracking-tight">
+                    Battery
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-sidebar-foreground">
+                  84%
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 p-2 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-1.5 text-sidebar-foreground/60">
+                  <HardDrive className="h-3 w-3" />
+                  <span className="text-[10px] font-bold uppercase tracking-tight">
+                    Storage
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-sidebar-foreground">
+                  1.2GB
+                </span>
+              </div>
+            </div>
+          </div>
+
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.path;

@@ -93,7 +93,7 @@ export default function SpeakingMetrics({
   }));
 
   return (
-    <Card className="shadow-sm border border-border/50 hover:shadow-md transition-shadow cursor-pointer">
+    <Card className="shadow-sm border border-border/50 hover:shadow-md transition-shadow cursor-pointer h-full">
       <CardHeader>
         <CardTitle>Your Speaking Metrics</CardTitle>
         <CardDescription>Performance vs. Ideal Targets</CardDescription>

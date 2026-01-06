@@ -21,6 +21,7 @@ import SentimentOverTime from "@/components/Analytics/SentimentOverTime";
 import ActionItems from "@/components/Analytics/ActionItems";
 import TranscriptSection from "@/components/Analytics/TranscriptSection";
 import AISummary from "@/components/Analytics/AISummary";
+import PerformanceCoach from "@/components/Analytics/PerformanceCoach";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getToneColor } from "@/utils/getToneColor";
 import { useToast } from "@/hooks/use-toast";
@@ -150,6 +151,9 @@ export default function ConversationDetailPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Performance Coach Skeleton */}
+              <Skeleton className="lg:col-span-12 h-32 rounded-xl" />
+
               {/* TalkTimeDistribution Skeleton */}
               <Skeleton className="lg:col-span-4 h-64 rounded-xl" />
 
@@ -297,8 +301,8 @@ export default function ConversationDetailPage() {
                   <AlertTriangle className="h-6 w-6 text-destructive" />
                 </div>
                 <div className="space-y-2 text-center sm:text-left">
-                  <DialogTitle className="text-xl">Delete Conversation</DialogTitle>
-                  <DialogDescription className="text-base leading-relaxed">
+                  <DialogTitle className="text-xl font-bold">Delete Conversation</DialogTitle>
+                  <DialogDescription className="text-base leading-relaxed text-foreground/80">
                     Are you sure you want to delete this conversation? This action
                     cannot be undone and all analysis data will be permanently
                     removed.
@@ -328,6 +332,9 @@ export default function ConversationDetailPage() {
 
           {/* --- Bento Grid Layout --- */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-12 transition-transform hover:scale-[1.005]">
+              <PerformanceCoach keyMetricsData={keyMetricsData} />
+            </div>
             <div className="lg:col-span-4 h-full transition-transform hover:scale-[1.01]">
               <TalkTimeDistribution
                 talkTimeDist={rawResponse.talkTimeDist || []}
