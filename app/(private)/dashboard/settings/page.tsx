@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +23,6 @@ interface User {
 }
 
 export default function SettingsPage() {
-  const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -37,11 +36,7 @@ export default function SettingsPage() {
         setUser(res.data.user);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch user data.",
-          variant: "destructive",
-        });
+        toast.error("Failed to fetch user data.");
       } finally {
         setLoading(false);
       }
@@ -54,17 +49,13 @@ export default function SettingsPage() {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      toast({
-        title: "Settings saved",
-        description: "Your preferences have been updated successfully.",
-      });
+      toast.success("Your preferences have been updated successfully.");
     }, 1000);
   };
 
   const handleFeatureNotReady = (featureName: string) => {
-    toast({
-      title: "Coming Soon",
-      description: `${featureName} feature is yet to be implemented.`,
+    toast.info(`${featureName} feature is yet to be implemented.`, {
+      description: "Coming Soon",
     });
   };
 

@@ -12,10 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { FileText, X } from "lucide-react";
+import { FileText, X, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 
 const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -90,6 +89,11 @@ const Upload = () => {
         setIsWorkerDone(true);
         clearInterval(interval);
         toast.info("File processed. You can now analyze it.");
+      } else if (status === "ERROR" || status === "FAILED") {
+        clearInterval(interval);
+        setUploadSuccess(false); // Reset upload success to allow retry
+        setIsUploading(false);
+        toast.error("File processing failed. Please try uploading again.");
       }
     }, 2000);
 
@@ -131,10 +135,9 @@ const Upload = () => {
 
   return (
     <DashboardLayout>
-      <ToastContainer position="top-right" autoClose={3000} />
-      <div className="min-h-screen bg-[#e9e6e2] p-4 sm:p-6 lg:p-8 space-y-6 transition-all">
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 space-y-6 transition-all">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-foreground">
             Upload Captions
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
@@ -165,10 +168,12 @@ const Upload = () => {
                     {!file ? (
                       <label
                         htmlFor="file"
-                        className="flex flex-col items-center w-full h-full cursor-pointer"
+                        className="flex flex-col items-center w-full h-full cursor-pointer group"
                       >
-                        <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="font-medium mb-1 text-gray-700">
+                        <div className="p-4 rounded-full bg-muted group-hover:bg-primary/10 transition-colors mb-3">
+                          <FileText className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                        <p className="font-medium mb-1 text-foreground group-hover:text-primary transition-colors">
                           Drop your file or click to browse
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -205,16 +210,28 @@ const Upload = () => {
                   </div>
                 </div>
 
+                {uploadSuccess && !isWorkerDone && (
+                  <div className="flex items-center justify-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary animate-pulse">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    Processing your file...
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full transition-all hover:scale-[1.02] cursor-pointer"
                   disabled={isUploading || uploadSuccess || !file}
                 >
-                  {isUploading
-                    ? "Uploading..."
-                    : uploadSuccess
-                    ? "Uploaded"
-                    : "Upload Session"}
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : uploadSuccess ? (
+                    "Uploaded"
+                  ) : (
+                    "Upload Session"
+                  )}
                 </Button>
 
                 {uploadSuccess && (
@@ -224,11 +241,18 @@ const Upload = () => {
                     className="w-full transition-all hover:scale-[1.02] cursor-pointer"
                     disabled={isAnalyzing || analysisDone || !isWorkerDone}
                   >
-                    {isAnalyzing
-                      ? "Analyzing..."
-                      : analysisDone
-                      ? "Done"
-                      : "Analyze Session"}
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : analysisDone ? (
+                      "Done"
+                    ) : isWorkerDone ? (
+                      "Analyze Session"
+                    ) : (
+                      "Waiting for Worker..."
+                    )}
                   </Button>
                 )}
               </form>

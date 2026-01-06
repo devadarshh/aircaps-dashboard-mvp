@@ -95,6 +95,15 @@ const AnalyticsClientPage = ({
     );
   };
 
+  const handleDeleteConversation = (id: string) => {
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    // Re-fetch action items or filter them
+    const deletedConv = conversations.find(c => c.id === id);
+    if (deletedConv) {
+        setActionItems(prev => prev.filter(item => item.conversationTitle !== deletedConv.title));
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -143,7 +152,7 @@ const AnalyticsClientPage = ({
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8 space-y-8 bg-[#e9e6e2]">
+      <div className="p-6 lg:p-8 space-y-8 bg-background">
         <div>
           <h1 className="text-3xl font-semibold text-foreground mb-2">
             Analytics
@@ -199,6 +208,7 @@ const AnalyticsClientPage = ({
           conversations={conversations}
           loading={false}
           getToneColor={getToneColor}
+          onDelete={handleDeleteConversation}
         />
       </div>
     </DashboardLayout>

@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /* Unified Design System combining Lovable (HSL) + ShadCN (OKLCH) */
 @theme inline {
   --color-background: var(--background);
@@ -101,38 +99,6 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-}
-
-/* === Dark Mode === */
-.dark {
-  --background: 300 7% 12%;
-  --foreground: 40 14% 90%;
-  --card: 300 7% 13%;
-  --card-foreground: 40 14% 90%;
-  --popover: 300 7% 13%;
-  --popover-foreground: 40 14% 90%;
-  --primary: 40 14% 90%;
-  --primary-foreground: 300 7% 12%;
-  --secondary: 30 2% 51%;
-  --secondary-foreground: 40 14% 90%;
-  --muted: 0 3% 23%;
-  --muted-foreground: 30 2% 65%;
-  --accent: 30 2% 51%;
-  --accent-foreground: 40 14% 90%;
-  --destructive: 0 62.8% 30.6%;
-  --border: 0 3% 23%;
-  --input: 0 3% 23%;
-  --ring: 30 2% 51%;
-
-  /* Sidebar Dark Mode */
-  --sidebar: hsl(300 7% 12%);
-  --sidebar-foreground: hsl(40 14% 90%);
-  --sidebar-primary: hsl(30 2% 51%);
-  --sidebar-primary-foreground: hsl(40 14% 90%);
-  --sidebar-accent: hsl(0 3% 23%);
-  --sidebar-accent-foreground: hsl(40 14% 90%);
-  --sidebar-border: hsl(0 3% 23%);
-  --sidebar-ring: hsl(30 2% 51%);
 }
 
 /* === Global Styles === */

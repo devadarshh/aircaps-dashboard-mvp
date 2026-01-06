@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "./providers";
-import "@/lib/worker-server"; // Initialize worker on server startup
+// import "@/lib/worker-server"; // Initialize worker on server startup (Moved to separate process)
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

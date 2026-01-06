@@ -8,6 +8,8 @@ import {
   Calendar,
   Clock,
   Share2,
+  Trash2,
+  AlertTriangle,
   MoreHorizontal,
 } from "lucide-react";
 import axios from "axios";
@@ -21,6 +23,15 @@ import TranscriptSection from "@/components/Analytics/TranscriptSection";
 import AISummary from "@/components/Analytics/AISummary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getToneColor } from "@/utils/getToneColor";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface TalkTimeItem {
   speaker: string;
@@ -58,6 +69,49 @@ export default function ConversationDetailPage() {
   const id = params?.id;
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "The conversation link has been copied to your clipboard.",
+      });
+    } catch (err) {
+      console.error("Failed to copy link:", err);
+      toast({
+        title: "Error",
+        description: "Failed to copy the link. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      await axios.delete(`/api/analysis/${id}`);
+      toast({
+        title: "Conversation deleted",
+        description: "The conversation has been successfully removed.",
+      });
+      router.push("/dashboard/analytics");
+    } catch (err) {
+      console.error("Failed to delete conversation", err);
+      toast({
+        title: "Error",
+        description: "Failed to delete the conversation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -78,10 +132,10 @@ export default function ConversationDetailPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="min-h-[80vh] w-full bg-[#F9FAFB] pb-20">
+        <div className="min-h-[80vh] w-full bg-background pb-20">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
             {/* Header Skeleton */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-6">
               <div className="flex items-start gap-4">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="flex flex-col gap-2">
@@ -167,10 +221,10 @@ export default function ConversationDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen w-full bg-[#F9FAFB] pb-20">
+      <div className="min-h-screen w-full bg-background pb-20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
           {/* --- Header Section --- */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-6">
             <div className="flex items-start gap-4">
               <Button
                 variant="ghost"
@@ -182,7 +236,7 @@ export default function ConversationDetailPage() {
               </Button>
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
                     {analysis.title}
                   </h1>
                   <Badge
@@ -220,6 +274,7 @@ export default function ConversationDetailPage() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleShare}
                 className="gap-2 bg-white hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <Share2 className="h-4 w-4" /> Share
@@ -227,12 +282,49 @@ export default function ConversationDetailPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className="bg-white hover:bg-gray-100 transition-colors cursor-pointer"
+                onClick={() => setShowDeleteDialog(true)}
+                className="bg-white hover:bg-red-50 text-destructive hover:text-destructive transition-colors cursor-pointer"
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
+
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader className="flex flex-col items-center sm:items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                  <AlertTriangle className="h-6 w-6 text-destructive" />
+                </div>
+                <div className="space-y-2 text-center sm:text-left">
+                  <DialogTitle className="text-xl">Delete Conversation</DialogTitle>
+                  <DialogDescription className="text-base leading-relaxed">
+                    Are you sure you want to delete this conversation? This action
+                    cannot be undone and all analysis data will be permanently
+                    removed.
+                  </DialogDescription>
+                </div>
+              </DialogHeader>
+              <DialogFooter className="mt-6 gap-2 sm:gap-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteDialog(false)}
+                  disabled={isDeleting}
+                  className="flex-1 sm:flex-none"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700"
+                >
+                  {isDeleting ? "Deleting..." : "Delete Conversation"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* --- Bento Grid Layout --- */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

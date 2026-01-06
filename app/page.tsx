@@ -21,7 +21,7 @@ const AuthPage = () => {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#e9e6e2] space-y-4">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background space-y-4">
         <Skeleton className="w-24 h-24 rounded-full" />
         <Skeleton className="w-48 h-8 rounded-md" />
         <Skeleton className="w-64 h-12 rounded-lg" />
@@ -40,11 +40,11 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-[#e9e6e2]">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-background">
       <div className="w-full max-w-sm">
-        <Card className="shadow-xl rounded-3xl bg-white overflow-hidden">
-          <CardHeader className="flex flex-col items-center py-6 space-y-2 bg-[#f7f5f2]">
-            <div className="p-4 rounded-full bg-white shadow-md">
+        <Card className="shadow-xl rounded-3xl bg-card overflow-hidden">
+          <CardHeader className="flex flex-col items-center py-6 space-y-2 bg-muted/50">
+            <div className="p-4 rounded-full bg-background shadow-md">
               <Image
                 src="/logo.svg"
                 alt="AirCaps Logo"
@@ -53,19 +53,19 @@ const AuthPage = () => {
                 className="object-contain"
               />
             </div>
-            <CardTitle className="text-2xl font-extrabold text-gray-900 font-inter">
+            <CardTitle className="text-2xl font-extrabold text-foreground font-inter">
               AirCaps
             </CardTitle>
           </CardHeader>
 
           <CardContent className="py-5 px-6 flex flex-col items-center">
-            <p className="text-center text-gray-700 text-base mb-3 leading-relaxed font-normal">
+            <p className="text-center text-muted-foreground text-base mb-3 leading-relaxed font-normal">
               Sign in to access your dashboard.
             </p>
 
             <Button
               onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-3 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 font-medium transition-all duration-200 shadow-sm hover:bg-gray-50 hover:shadow-md hover:scale-105 cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 py-3 bg-background border border-border rounded-lg text-foreground font-medium transition-all duration-200 shadow-sm hover:bg-muted hover:shadow-md hover:scale-105 cursor-pointer"
               disabled={isLoading}
             >
               {isLoading ? (

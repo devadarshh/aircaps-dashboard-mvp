@@ -9,9 +9,7 @@ import { splitter } from "@/lib/splitter";
 import { redis } from "@/lib/redis";
 import { ensureCollectionExists } from "@/utils/ensureCollection";
 
-// `redis` may be a NoopRedis fallback when UPSTASH_REDIS_URL is missing. To
-// satisfy BullMQ's types for `WorkerOptions.connection` we check for the noop
-// marker and only pass a real redis instance when available.
+
 const _redisMarker = redis as unknown as { __isNoop?: true };
 const bullConnection: WorkerOptions["connection"] | undefined =
   _redisMarker.__isNoop
@@ -40,84 +38,114 @@ function calculateDurationFormText(transcript: string): number {
   return durationMinutes;
 }
 
-const worker = new Worker<FileJobData>(
-  "file-upload-queue",
-  async (job) => {
-    console.log(`Processing job ${job.id} with data:`, job.data);
-    const { fileId } = job.data;
+let worker: Worker<FileJobData> | null = null;
 
-    const fileRecord = await prisma.file.findUnique({
-      where: { id: fileId },
-    });
-    if (!fileRecord) {
-      throw new Error(`File with ID ${fileId} not found in the database`);
-    }
+if (bullConnection) {
+  worker = new Worker<FileJobData>(
+    "file-upload-queue",
+    async (job) => {
+      console.log(`Processing job ${job.id} with data:`, job.data);
+      const { fileId } = job.data;
 
-    const { data: fileBlob, error: downloadError } = await supabase.storage
-      .from(process.env.SUPABASE_BUCKET_NAME!)
-      .download(fileRecord.supabasePath);
+      try {
+        const fileRecord = await prisma.file.findUnique({
+          where: { id: fileId },
+        });
+        if (!fileRecord) {
+          throw new Error(`File with ID ${fileId} not found in the database`);
+        }
 
-    if (downloadError || !fileBlob) {
-      throw new Error(
-        `Failed to download file from supabase: ${fileRecord.supabasePath}`
-      );
-    }
+        const { data: fileBlob, error: downloadError } = await supabase.storage
+          .from(process.env.SUPABASE_BUCKET_NAME!)
+          .download(fileRecord.supabasePath);
 
-    const text = await fileBlob.text();
-    const durationMinutes = calculateDurationFormText(text);
-    console.log(
-      `File ${fileId}: Calculated duration ${durationMinutes.toFixed(2)} mins`
-    );
+        if (downloadError || !fileBlob) {
+          throw new Error(
+            `Failed to download file from supabase: ${fileRecord.supabasePath}`
+          );
+        }
 
-    await prisma.file.update({
-      where: { id: fileId },
-      data: {
-        durationMinutes: durationMinutes,
-        status: "PROCESSING",
-      },
-    });
-    const doc = new Document({
-      pageContent: text,
-      metadata: {
-        source: fileRecord.supabasePath,
-        fileId: fileId,
-      },
-    });
-    const chunks = await splitter.splitDocuments([doc]);
-    const texts = chunks.map((chunk) => chunk.pageContent);
+        const text = await fileBlob.text();
+        const durationMinutes = calculateDurationFormText(text);
+        console.log(
+          `File ${fileId}: Calculated duration ${durationMinutes.toFixed(2)} mins`
+        );
 
-    const embeddings = (await hf.featureExtraction({
-      model: "sentence-transformers/all-MiniLM-L6-v2",
-      inputs: texts,
-    })) as number[][];
+        await prisma.file.update({
+          where: { id: fileId },
+          data: {
+            durationMinutes: durationMinutes,
+            status: "PROCESSING",
+          },
+        });
 
-    console.log(`Generated ${embeddings.length} embeddings.`);
+        console.log(`File ${fileId}: Status updated to PROCESSING`);
 
-    const points = chunks.map((chunk, index) => ({
-      id: uuidv4(),
-      vector: embeddings[index],
-      payload: {
-        ...chunk.metadata,
-        content: chunk.pageContent,
-        fileId,
-        loc: { pageNumber: index + 1 },
-      },
-    }));
-    await qdrantClient.upsert(COLLECTION_NAME, { points });
-    console.log(`Stored ${points.length} embeddings for file ${fileId}`);
-    await prisma.file.update({
-      where: { id: fileId },
-      data: {
-        status: "READY",
-      },
-    });
-  },
+        const doc = new Document({
+          pageContent: text,
+          metadata: {
+            source: fileRecord.supabasePath,
+            fileId: fileId,
+          },
+        });
+        const chunks = await splitter.splitDocuments([doc]);
+        const texts = chunks.map((chunk) => chunk.pageContent);
 
-  workerOptions
-);
+        console.log(`File ${fileId}: Split into ${texts.length} chunks`);
+
+        console.log(`File ${fileId}: Generating embeddings...`);
+        const embeddings = (await hf.featureExtraction({
+          model: "sentence-transformers/all-MiniLM-L6-v2",
+          inputs: texts,
+        })) as number[][];
+
+        console.log(`File ${fileId}: Generated ${embeddings.length} embeddings.`);
+
+        const points = chunks.map((chunk, index) => ({
+          id: uuidv4(),
+          vector: embeddings[index],
+          payload: {
+            ...chunk.metadata,
+            content: chunk.pageContent,
+            fileId,
+            loc: { pageNumber: index + 1 },
+          },
+        }));
+
+        console.log(`File ${fileId}: Upserting ${points.length} points to Qdrant...`);
+        await qdrantClient.upsert(COLLECTION_NAME, { points });
+        console.log(`File ${fileId}: Stored embeddings in Qdrant.`);
+
+        await prisma.file.update({
+          where: { id: fileId },
+          data: {
+            status: "READY",
+          },
+        });
+        console.log(`File ${fileId}: Status updated to READY`);
+      } catch (error: any) {
+        console.error(`Error processing job ${job.id} for file ${fileId}:`, error);
+        await prisma.file.update({
+          where: { id: fileId },
+          data: {
+            status: "ERROR",
+          },
+        });
+        throw error; // Let BullMQ handle the retry if configured
+      }
+    },
+
+    workerOptions
+  );
+} else {
+  console.error("❌ Worker could not start: No valid Redis connection found. Check your UPSTASH_REDIS_URL.");
+}
+
 ensureCollectionExists()
   .then(() => {
-    console.log("Worker is ready and listening for jobs...");
+    if (bullConnection) {
+      console.log("🚀 Worker is ready and listening for jobs...");
+    }
   })
   .catch((err) => {
     console.error("Failed to initialize worker:", err);

@@ -5,8 +5,16 @@ import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Queue } from "bullmq";
+import { redis } from "@/lib/redis";
 
-const fileQueue = new Queue("file-upload-queue");
+// Check if redis is a Noop fallback
+const _redisMarker = redis as unknown as { __isNoop?: true };
+const connection = _redisMarker.__isNoop ? undefined : (redis as any);
+
+const fileQueue = new Queue("file-upload-queue", { 
+  connection,
+  skipVersionCheck: true 
+});
 
 export async function POST(req: NextRequest) {
   try {
