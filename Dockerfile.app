@@ -8,8 +8,8 @@ WORKDIR /app
 # Copy package files first
 COPY package.json package-lock.json ./
 
-# Install dependencies (using npm install to auto-fix lockfile discrepancies)
-RUN npm install
+# Install dependencies (using legacy-peer-deps to bypass next-auth conflict)
+RUN npm install --legacy-peer-deps
 
 # Copy all source files
 COPY . .
@@ -21,7 +21,7 @@ RUN npx prisma generate
 RUN npm run build:web
 
 # Remove dev dependencies
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev --legacy-peer-deps
 
 # Set production environment for runtime
 ENV NODE_ENV=production
