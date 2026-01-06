@@ -1,18 +1,28 @@
 import { worker } from "@/lib/worker";
 
-worker.on("completed", (job) => {
-  console.log(`Job ${job.id} completed`);
-});
+const w = worker;
 
-worker.on("failed", (job, err) => {
-  console.error(`Job ${job?.id} failed:`, err);
-});
+if (w) {
+  w.on("completed", (job) => {
+    console.log(`Job ${job?.id} completed`);
+  });
 
-// Graceful shutdown
-process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, shutting down gracefully...");
-  await worker.close();
-  process.exit(0);
-});
+  w.on("failed", (job, err) => {
+    console.error(`Job ${job?.id} failed:`, err);
+  });
 
-console.log("Worker background process initialized");
+  // Graceful shutdown
+  process.on("SIGTERM", async () => {
+    console.log("SIGTERM received, shutting down gracefully...");
+    try {
+      await w.close();
+    } catch (err) {
+      console.error("Error closing worker:", err);
+    }
+    process.exit(0);
+  });
+
+  console.log("Worker background process initialized");
+} else {
+  console.warn("Worker is not initialized (null). Background process not started.");
+}
