@@ -1,0 +1,29 @@
+# Dockerfile for the worker-only service (Render)
+FROM node:20-slim
+WORKDIR /app
+
+
+# Copy package files first
+COPY package.json package-lock.json tsconfig.json tsconfig.worker.json ./
+
+# Install dependencies (using npm install to auto-fix lockfile discrepancies)
+RUN npm install
+
+# Copy ALL source files after deps are installed
+COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build the worker TypeScript
+RUN npm run build:worker
+
+# Now remove dev dependencies to reduce final image size
+RUN npm prune --omit=dev
+
+# Set production environment for runtime
+ENV NODE_ENV=production
+
+# Run the compiled worker
+# Run the compiled worker with tsconfig-paths to resolve aliases
+CMD ["node", "-r", "tsconfig-paths/register", "dist-worker/lib/worker.js"]
