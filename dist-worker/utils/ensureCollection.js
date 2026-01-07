@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ensureCollectionExists = ensureCollectionExists;
-const qdrant_1 = require("@/lib/qdrant");
+const qdrant_1 = require("../lib/qdrant");
 const VECTOR_DIMENSION = 384;
 const VECTOR_DISTANCE = "Cosine";
 const PAYLOAD_INDEX_FIELD = "fileId";

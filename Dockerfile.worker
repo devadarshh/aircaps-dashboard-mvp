@@ -6,6 +6,9 @@ WORKDIR /app
 # Copy package files first
 COPY package.json package-lock.json tsconfig.json tsconfig.worker.json ./
 
+# Install system dependencies (OpenSSL for Prisma)
+RUN apt-get update -y && apt-get install -y openssl ca-certificates
+
 # Install dependencies (using legacy-peer-deps to bypass next-auth conflict)
 RUN npm install --legacy-peer-deps
 
@@ -18,8 +21,6 @@ RUN npx prisma generate
 # Build the worker TypeScript
 RUN npm run build:worker
 
-# Now remove dev dependencies to reduce final image size
-RUN npm prune --omit=dev --legacy-peer-deps
 
 # Set production environment for runtime
 ENV NODE_ENV=production

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const worker_1 = require("@/lib/worker");
+const worker_1 = require("../lib/worker");
 const w = worker_1.worker;
 if (w) {
     w.on("completed", (job) => {
