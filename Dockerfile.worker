@@ -22,9 +22,14 @@ RUN npx prisma generate
 RUN npm run build:worker
 
 
+# Install PM2 globally
+RUN npm install -g pm2
+
+# Copy ecosystem config
+COPY ecosystem.config.js ./
+
 # Set production environment for runtime
 ENV NODE_ENV=production
 
-# Run the compiled worker
-# Run the compiled worker with tsconfig-paths to resolve aliases
-CMD ["node", "-r", "tsconfig-paths/register", "dist-worker/lib/worker.js"]
+# Run the compiled worker using PM2
+CMD ["pm2-runtime", "start", "ecosystem.config.js", "--only", "worker"]
