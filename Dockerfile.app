@@ -24,8 +24,14 @@ RUN npx prisma generate
 RUN npm run build:web
 
 
+# Install PM2 globally
+RUN npm install -g pm2
+
+# Copy ecosystem config
+COPY ecosystem.config.js ./
+
 # Set production environment for runtime
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["npm", "start"]
+# Start the application using PM2
+CMD ["pm2-runtime", "start", "ecosystem.config.js", "--only", "web"]
