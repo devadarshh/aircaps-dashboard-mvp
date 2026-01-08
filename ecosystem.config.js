@@ -4,8 +4,8 @@ module.exports = {
       name: "web",
       script: "npm",
       args: "start",
-      instances: "max", // Use all available cores
-      exec_mode: "cluster", // Enable clustering
+      instances: 1, // Cluster mode with 'npm' causes port conflicts. Using fork mode.
+      exec_mode: "fork",
       env: {
         NODE_ENV: "production",
       },
