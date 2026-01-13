@@ -2,7 +2,7 @@
 
 AirCaps Dashboard MVP is a minimal viable product for managing, uploading, and analyzing live caption sessions captured via AirCaps Smart Glasses. The dashboard enables real-time transcription, analytics, and actionable insights for conversations.
 
-**🌐 Live Demo:** [Access Aircaps Dashboard](https://aircaps-dashboard.vercel.app/)  
+**🌐 Live Demo:** [Access Aircaps Dashboard](https://aircaps.landr.xyz/)  
 **🎬 Project Walkthrough:** [Watch on Loom]()
 
 ## ✅ Core Features
